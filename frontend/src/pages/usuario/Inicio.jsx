@@ -1,0 +1,11 @@
+import { useAuth } from '../../context/AuthContext';
+
+export default function UsuarioInicio() {
+  const { user } = useAuth();
+  return (
+    <div className="page">
+      <h2>Bienvenido, {user?.nombre}</h2>
+      <p>Panel de usuario. Desde aqui puedes ver y actualizar tus tareas.</p>
+    </div>
+  );
+}
