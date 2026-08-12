@@ -11,6 +11,10 @@ import AdminUsuarios from './pages/admin/Usuarios';
 import AsistenteInicio from './pages/asistente/Inicio';
 import AsistenteReuniones from './pages/asistente/Reuniones';
 
+import JefeDeptoInicio from './pages/jefe_depto/Inicio';
+
+import GerenteInicio from './pages/gerente/Inicio';
+
 import UsuarioInicio from './pages/usuario/Inicio';
 import UsuarioTareas from './pages/usuario/Tareas';
 
@@ -33,6 +37,20 @@ export default function App() {
           <Route element={<MainLayout />}>
             <Route path="/asistente/inicio" element={<AsistenteInicio />} />
             <Route path="/asistente/reuniones" element={<AsistenteReuniones />} />
+          </Route>
+        </Route>
+
+        {/* Rutas del jefe de departamento */}
+        <Route element={<PrivateRoute allowedRoles={['JefeDepto']} />}>
+          <Route element={<MainLayout />}>
+            <Route path="/jefe_depto/inicio" element={<JefeDeptoInicio />} />
+          </Route>
+        </Route>
+
+        {/* Rutas del gerente */}
+        <Route element={<PrivateRoute allowedRoles={['Gerente']} />}>
+          <Route element={<MainLayout />}>
+            <Route path="/gerente/inicio" element={<GerenteInicio />} />
           </Route>
         </Route>
 

@@ -11,8 +11,6 @@ async function getReuniones(req, res) {
   re.reu_lugar,
   re.reu_fecha,
   re.reu_hora,
-  re.created_at,
-  re.updated_at,
   re.use_id,
   u.nombre AS creado_por_nombre
 FROM reuniones re
