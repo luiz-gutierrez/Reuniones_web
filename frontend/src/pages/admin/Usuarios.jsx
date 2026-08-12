@@ -50,7 +50,8 @@ export default function AdminUsuarios() {
                 <td>{u.apellido}</td>
                 <td>{u.telefono}</td>
                 <td>{u.correo}</td>
-                <td>{u.nombre_rol}</td>
+                <td>{u.rol_nombre
+}</td>
               </tr>
             ))}
           </tbody>

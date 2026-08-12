@@ -7,14 +7,14 @@
 -- Tabla de roles (necesaria por el FK fk_users_rol de tu tabla users)
 CREATE TABLE IF NOT EXISTS roles (
     rol_id INT AUTO_INCREMENT PRIMARY KEY,
-    nombre_rol VARCHAR(50) NOT NULL UNIQUE
+    rol_nombre VARCHAR(50) NOT NULL UNIQUE
 );
 
-INSERT INTO roles (rol_id, nombre_rol) VALUES
+INSERT INTO roles (rol_id, rol_nombre) VALUES
     (1, 'admin'),
     (2, 'secretaria'),
     (3, 'usuario')
-ON DUPLICATE KEY UPDATE nombre_rol = VALUES(nombre_rol);
+ON DUPLICATE KEY UPDATE rol_nombre = VALUES(rol_nombre);
 
 -- Tabla de reuniones (vista de la secretaria)
 CREATE TABLE IF NOT EXISTS reuniones (

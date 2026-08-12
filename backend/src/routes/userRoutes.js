@@ -6,7 +6,7 @@ import checkRole from '../middlewares/role.js';
 const router = express.Router();
 
 // Solo el admin puede ver y crear usuarios
-router.get('/', verifyToken, checkRole('admin'), getUsuarios);
-router.post('/', verifyToken, checkRole('admin'), crearUsuario);
+router.get('/', verifyToken, checkRole('Admin'), getUsuarios);
+router.post('/', verifyToken, checkRole('Admin'), crearUsuario);
 
 export default router;

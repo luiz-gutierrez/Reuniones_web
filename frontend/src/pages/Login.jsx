@@ -3,9 +3,9 @@ import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 
 const RUTAS_POR_ROL = {
-  admin: '/admin/inicio',
-  secretaria: '/secretaria/inicio',
-  usuario: '/usuario/inicio'
+  Admin: '/admin/inicio',
+  Asistente: '/asistente/inicio',
+  Usuario: '/usuario/inicio'
 };
 
 export default function Login() {

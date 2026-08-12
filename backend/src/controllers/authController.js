@@ -15,7 +15,7 @@ async function login(req, res) {
   try {
     const [rows] = await pool.query(
       `SELECT u.id, u.nombre, u.apellido, u.telefono, u.correo, u.contrasena,
-              u.rol_id, r.nombre_rol
+              u.rol_id, r.rol_nombre
        FROM users u
        INNER JOIN roles r ON u.rol_id = r.rol_id
        WHERE u.telefono = ?
@@ -36,7 +36,7 @@ async function login(req, res) {
 
     const payload = {
       id: usuario.id,
-      rol: usuario.nombre_rol // 'admin' | 'secretaria' | 'usuario'
+      rol: usuario.rol_nombre // 'admin' | 'secretaria' | 'usuario'
     };
 
     const token = jwt.sign(payload, process.env.JWT_SECRET, {
@@ -51,7 +51,7 @@ async function login(req, res) {
         apellido: usuario.apellido,
         telefono: usuario.telefono,
         correo: usuario.correo,
-        rol: usuario.nombre_rol
+        rol: usuario.rol_nombre
       }
     });
   } catch (error) {
@@ -64,7 +64,7 @@ async function login(req, res) {
 async function me(req, res) {
   try {
     const [rows] = await pool.query(
-      `SELECT u.id, u.nombre, u.apellido, u.telefono, u.correo, r.nombre_rol
+      `SELECT u.id, u.nombre, u.apellido, u.telefono, u.correo, r.rol_nombre
        FROM users u
        INNER JOIN roles r ON u.rol_id = r.rol_id
        WHERE u.id = ?
@@ -84,7 +84,7 @@ async function me(req, res) {
       apellido: usuario.apellido,
       telefono: usuario.telefono,
       correo: usuario.correo,
-      rol: usuario.nombre_rol
+      rol: usuario.rol_nombre
     });
   } catch (error) {
     console.error('Error en me:', error);

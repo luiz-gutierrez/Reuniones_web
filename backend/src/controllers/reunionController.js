@@ -4,11 +4,19 @@ import { pool } from '../config/db.js';
 async function getReuniones(req, res) {
   try {
     const [rows] = await pool.query(
-      `SELECT re.id, re.titulo, re.descripcion, re.fecha, re.hora,
-              re.creado_por, u.nombre AS creado_por_nombre
-       FROM reuniones re
-       LEFT JOIN users u ON re.creado_por = u.id
-       ORDER BY re.fecha DESC, re.hora DESC`
+      `SELECT 
+  re.reu_id,
+  re.reu_nombre,
+  re.reu_descripcion,
+  re.reu_lugar,
+  re.reu_fecha,
+  re.reu_hora,
+  re.created_at,
+  re.updated_at,
+  re.use_id,
+  u.nombre AS creado_por_nombre
+FROM reuniones re
+LEFT JOIN users u ON re.use_id = u.id`
     );
     return res.json(rows);
   } catch (error) {
@@ -18,24 +26,48 @@ async function getReuniones(req, res) {
 }
 
 // POST /api/reuniones  (secretaria)
-// body: { titulo, descripcion, fecha, hora }
+// body: { nombre, descripcion, fecha, hora }
 async function crearReunion(req, res) {
-  const { titulo, descripcion, fecha, hora } = req.body;
+  const {
+    nombre,
+    descripcion,
+    lugar,
+    fecha,
+    hora
+  } = req.body;
 
-  if (!titulo || !fecha || !hora) {
-    return res.status(400).json({ message: 'Titulo, fecha y hora son obligatorios' });
+  if (!nombre || !lugar || !fecha || !hora) {
+    return res.status(400).json({
+      message: 'Nombre, lugar, fecha y hora son obligatorios'
+    });
   }
 
   try {
     const [result] = await pool.query(
-      `INSERT INTO reuniones (titulo, descripcion, fecha, hora, creado_por)
-       VALUES (?, ?, ?, ?, ?)`,
-      [titulo, descripcion || null, fecha, hora, req.user.id]
+      `INSERT INTO reuniones 
+        (reu_nombre, reu_descripcion, reu_lugar, reu_fecha, reu_hora, use_id)
+       VALUES (?, ?, ?, ?, ?, ?)`,
+      [
+        nombre,
+        descripcion || null,
+        lugar,
+        fecha,
+        hora,
+        req.user.id
+      ]
     );
-    return res.status(201).json({ id: result.insertId, message: 'Reunion creada correctamente' });
+
+    return res.status(201).json({
+      id: result.insertId,
+      message: 'Reunión creada correctamente'
+    });
+
   } catch (error) {
     console.error('Error al crear reunion:', error);
-    return res.status(500).json({ message: 'Error interno del servidor' });
+
+    return res.status(500).json({
+      message: 'Error interno del servidor'
+    });
   }
 }
 

@@ -2,15 +2,15 @@ import { Outlet, Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 
 const MENUS = {
-  admin: [
+  Admin: [
     { to: '/admin/inicio', label: 'Inicio' },
     { to: '/admin/usuarios', label: 'Usuarios' }
   ],
-  secretaria: [
-    { to: '/secretaria/inicio', label: 'Inicio' },
-    { to: '/secretaria/reuniones', label: 'Reuniones' }
+  Asistente: [
+    { to: '/asistente/inicio', label: 'Inicio' },
+    { to: '/asistente/reuniones', label: 'Reuniones' }
   ],
-  usuario: [
+  Usuario: [
     { to: '/usuario/inicio', label: 'Inicio' },
     { to: '/usuario/tareas', label: 'Tareas' }
   ]

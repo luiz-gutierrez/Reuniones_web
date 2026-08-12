@@ -6,8 +6,9 @@ export default function SecretariaReuniones() {
   const [cargando, setCargando] = useState(true);
   const [error, setError] = useState('');
 
-  const [titulo, setTitulo] = useState('');
+  const [nombre, setTitulo] = useState('');
   const [descripcion, setDescripcion] = useState('');
+  const [lugar, setLugar] = useState('');
   const [fecha, setFecha] = useState('');
   const [hora, setHora] = useState('');
   const [guardando, setGuardando] = useState(false);
@@ -30,22 +31,35 @@ export default function SecretariaReuniones() {
   }
 
   async function handleCrear(e) {
-    e.preventDefault();
-    setGuardando(true);
-    setError('');
-    try {
-      await api.post('/reuniones', { titulo, descripcion, fecha, hora });
-      setTitulo('');
-      setDescripcion('');
-      setFecha('');
-      setHora('');
-      await cargarReuniones();
-    } catch (err) {
-      setError(err.response?.data?.message || 'Error al crear reunion');
-    } finally {
-      setGuardando(false);
-    }
+  e.preventDefault();
+  setGuardando(true);
+  setError('');
+
+  try {
+    await api.post('/reuniones', {
+      nombre,
+      descripcion,
+      lugar,
+      fecha,
+      hora
+    });
+
+    setTitulo('');
+    setDescripcion('');
+    setLugar('');
+    setFecha('');
+    setHora('');
+
+    await cargarReuniones();
+
+  } catch (err) {
+    setError(
+      err.response?.data?.message || 'Error al crear reunión'
+    );
+  } finally {
+    setGuardando(false);
   }
+}
 
   return (
     <div className="page">
@@ -54,8 +68,8 @@ export default function SecretariaReuniones() {
       <form className="inline-form" onSubmit={handleCrear}>
         <input
           type="text"
-          placeholder="Titulo"
-          value={titulo}
+          placeholder="Nombre"
+          value={nombre}
           onChange={(e) => setTitulo(e.target.value)}
           required
         />
@@ -64,6 +78,13 @@ export default function SecretariaReuniones() {
           placeholder="Descripcion"
           value={descripcion}
           onChange={(e) => setDescripcion(e.target.value)}
+        />
+           <input
+          type="text"
+          placeholder="Lugar de la reunion"
+          value={lugar}
+          onChange={(e) => setLugar(e.target.value)}
+          required
         />
         <input
           type="date"
@@ -89,24 +110,28 @@ export default function SecretariaReuniones() {
         <table className="table">
           <thead>
             <tr>
-              <th>Titulo</th>
+              <th>Id</th>
+              <th>Nombre</th>
               <th>Descripcion</th>
+              <th>Lugar</th>
               <th>Fecha</th>
               <th>Hora</th>
               <th>Creada por</th>
             </tr>
           </thead>
           <tbody>
-            {reuniones.map((r) => (
-              <tr key={r.id}>
-                <td>{r.titulo}</td>
-                <td>{r.descripcion}</td>
-                <td>{r.fecha}</td>
-                <td>{r.hora}</td>
-                <td>{r.creado_por_nombre}</td>
-              </tr>
-            ))}
-          </tbody>
+  {reuniones.map((r) => (
+    <tr key={r.reu_id}>
+      <td>{r.reu_id}</td>
+      <td>{r.reu_nombre}</td>
+      <td>{r.reu_descripcion}</td>
+      <td>{r.reu_lugar}</td>
+      <td>{r.reu_fecha}</td>
+      <td>{r.reu_hora}</td>
+      <td>{r.creado_por_nombre}</td>
+    </tr>
+  ))}
+</tbody>
         </table>
       )}
     </div>

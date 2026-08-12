@@ -6,7 +6,8 @@ async function getUsuarios(req, res) {
   try {
     const [rows] = await pool.query(
       `SELECT u.id, u.nombre, u.apellido, u.telefono, u.correo,
-              u.created_at, r.nombre_rol
+              u.created_at, r.rol_nombre
+
        FROM users u
        INNER JOIN roles r ON u.rol_id = r.rol_id
        ORDER BY u.id DESC`

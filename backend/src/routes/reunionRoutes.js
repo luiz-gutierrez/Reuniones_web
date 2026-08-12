@@ -6,8 +6,8 @@ import checkRole from '../middlewares/role.js';
 const router = express.Router();
 
 // Admin y secretaria pueden ver las reuniones
-router.get('/', verifyToken, checkRole('admin', 'secretaria'), getReuniones);
+router.get('/', verifyToken, checkRole('Admin', 'Asistente'), getReuniones);
 // Solo la secretaria puede crear reuniones
-router.post('/', verifyToken, checkRole('secretaria'), crearReunion);
+router.post('/', verifyToken, checkRole('Asistente'), crearReunion);
 
 export default router;
