@@ -1,10 +1,8 @@
-import bcrypt from 'bcryptjs';
 import jwt from 'jsonwebtoken';
-import 'dotenv/config';
+import bcrypt from 'bcryptjs';
 import { pool } from '../config/db.js';
+import 'dotenv/config';
 
-// POST /api/auth/login
-// body: { telefono, contrasena }
 async function login(req, res) {
   const { telefono, contrasena } = req.body;
 
@@ -15,9 +13,10 @@ async function login(req, res) {
   try {
     const [rows] = await pool.query(
       `SELECT u.id, u.nombre, u.apellido, u.telefono, u.correo, u.contrasena,
-              u.rol_id, r.rol_nombre
+              p.pue_id, r.rol_nombre as rol
        FROM users u
-       INNER JOIN roles r ON u.rol_id = r.rol_id
+       INNER JOIN puestos p ON u.pue_id = p.pue_id
+       INNER JOIN roles r ON p.rol_id = r.rol_id
        WHERE u.telefono = ?
        LIMIT 1`,
       [telefono]
@@ -36,22 +35,20 @@ async function login(req, res) {
 
     const payload = {
       id: usuario.id,
-      rol: usuario.rol_nombre // 'admin' | 'secretaria' | 'usuario'
+      rol: usuario.rol
     };
 
     const token = jwt.sign(payload, process.env.JWT_SECRET, {
       expiresIn: process.env.JWT_EXPIRES_IN || '8h'
     });
 
+    const { contrasena: _contrasena, ...usuarioSinPassword } = usuario;
+
     return res.json({
       token,
       user: {
-        id: usuario.id,
-        nombre: usuario.nombre,
-        apellido: usuario.apellido,
-        telefono: usuario.telefono,
-        correo: usuario.correo,
-        rol: usuario.rol_nombre
+        ...usuarioSinPassword,
+        rol: usuario.rol
       }
     });
   } catch (error) {
@@ -60,36 +57,4 @@ async function login(req, res) {
   }
 }
 
-// GET /api/auth/me  (requiere token)
-async function me(req, res) {
-  try {
-    const [rows] = await pool.query(
-      `SELECT u.id, u.nombre, u.apellido, u.telefono, u.correo, r.rol_nombre
-       FROM users u
-       INNER JOIN roles r ON u.rol_id = r.rol_id
-       WHERE u.id = ?
-       LIMIT 1`,
-      [req.user.id]
-    );
-
-    if (rows.length === 0) {
-      return res.status(404).json({ message: 'Usuario no encontrado' });
-    }
-
-    const usuario = rows[0];
-
-    return res.json({
-      id: usuario.id,
-      nombre: usuario.nombre,
-      apellido: usuario.apellido,
-      telefono: usuario.telefono,
-      correo: usuario.correo,
-      rol: usuario.rol_nombre
-    });
-  } catch (error) {
-    console.error('Error en me:', error);
-    return res.status(500).json({ message: 'Error interno del servidor' });
-  }
-}
-
-export { login, me };
+export { login };

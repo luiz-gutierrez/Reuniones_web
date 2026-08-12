@@ -5,6 +5,7 @@ import authRoutes from './routes/authRoutes.js';
 import userRoutes from './routes/userRoutes.js';
 import reunionRoutes from './routes/reunionRoutes.js';
 import tareaRoutes from './routes/tareaRoutes.js';
+import puestosRoutes from './routes/puestosRoutes.js';
 
 const app = express();
 
@@ -19,6 +20,8 @@ app.use('/api/auth', authRoutes);
 app.use('/api/usuarios', userRoutes);
 app.use('/api/reuniones', reunionRoutes);
 app.use('/api/tareas', tareaRoutes);
+app.use('/api/puestos', puestosRoutes);
+
 
 // Manejo de rutas no encontradas
 app.use((req, res) => {
