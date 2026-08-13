@@ -266,21 +266,26 @@ export default function ReunionDetalle() {
             }}>
               <FaEdit size={14} /> Editar
             </button>
-            <button style={{
-              backgroundColor: '#EF4444',
-              color: 'white',
-              border: 'none',
-              padding: '0.4rem 1rem',
-              borderRadius: '6px',
-              cursor: 'pointer',
-              fontSize: '0.85rem',
-              display: 'flex',
-              alignItems: 'center',
-              gap: '0.4rem'
-            }}>
-              <FaTrash size={14} /> Eliminar
-            </button>
-          </div>
+            <button 
+  onClick={() => navigate(`/asistente/minutas/${reunion.reu_id || reunion.id}`)}
+  style={{
+    backgroundColor: '#10B981',
+    color: 'white',
+    border: 'none',
+    padding: '0.4rem 1rem',
+    borderRadius: '6px',
+    cursor: 'pointer',
+    fontSize: '0.85rem',
+    display: 'flex',
+    alignItems: 'center',
+    gap: '0.4rem'
+  }}
+  onMouseEnter={(e) => e.currentTarget.style.backgroundColor = '#059669'}
+  onMouseLeave={(e) => e.currentTarget.style.backgroundColor = '#10B981'}
+>
+  <FaEdit size={14} /> Minuta
+</button>
+            </div>
         </div>
 
         <div style={{
