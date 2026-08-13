@@ -10,13 +10,8 @@ import {
   FaSpinner,
   FaUsers,
   FaChevronRight,
-  FaCalendarDay,
-  FaCalendarWeek,
-  FaCalendarCheck,
-  FaHistory,
   FaSearch,
-  FaTimes,
-  FaFilter
+  FaTimes
 } from 'react-icons/fa';
 
 const COLORS = {
@@ -33,9 +28,8 @@ export default function Agenda() {
   const [reuniones, setReuniones] = useState([]);
   const [cargando, setCargando] = useState(true);
   const [error, setError] = useState('');
-  const [filtroCategoria, setFiltroCategoria] = useState('todas'); // 'todas' | 'pasadas' | 'hoy' | 'proximas'
+  const [filtroCategoria, setFiltroCategoria] = useState('todas');
   const [busqueda, setBusqueda] = useState('');
-  const [vista, setVista] = useState('lista'); // 'lista' | 'calendario'
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -48,57 +42,68 @@ export default function Agenda() {
     try {
       const { data } = await api.get('/reuniones');
       console.log('📋 Reuniones cargadas:', data);
+      
+      // Mostrar las fechas para depuración
+      data.forEach(r => {
+        console.log(`📅 Reunión: ${r.reu_nombre}, Fecha: ${r.reu_fecha}, Tipo: ${typeof r.reu_fecha}`);
+      });
+      
       setReuniones(data);
     } catch (err) {
       setError(err.response?.data?.message || 'Error al cargar reuniones');
-      console.error('❌ Error:', err);
     } finally {
       setCargando(false);
     }
   }
 
+  // ✅ Función para normalizar fecha (obtener solo YYYY-MM-DD)
+  const normalizarFecha = (fecha) => {
+    if (!fecha) return '';
+    // Si es un string ISO (2026-08-13T06:00:00.000Z)
+    if (typeof fecha === 'string' && fecha.includes('T')) {
+      return fecha.split('T')[0];
+    }
+    // Si es un objeto Date
+    if (fecha instanceof Date) {
+      return fecha.toISOString().split('T')[0];
+    }
+    // Si ya es YYYY-MM-DD
+    if (typeof fecha === 'string' && fecha.match(/^\d{4}-\d{2}-\d{2}$/)) {
+      return fecha;
+    }
+    // Si es otro formato, intentar convertirlo
+    try {
+      const d = new Date(fecha);
+      if (!isNaN(d.getTime())) {
+        return d.toISOString().split('T')[0];
+      }
+    } catch (e) {
+      console.warn('Error al normalizar fecha:', fecha);
+    }
+    return fecha;
+  };
+
   // Clasificar reuniones por categoría
   const clasificarReuniones = () => {
     const hoy = new Date();
     const hoyStr = hoy.toISOString().split('T')[0];
-    
-    // Obtener fecha de ayer
-    const ayer = new Date(hoy);
-    ayer.setDate(ayer.getDate() - 1);
-    const ayerStr = ayer.toISOString().split('T')[0];
-
-    // Obtener fecha de mañana
-    const manana = new Date(hoy);
-    manana.setDate(manana.getDate() + 1);
-    const mananaStr = manana.toISOString().split('T')[0];
-
-    // Obtener fecha de dentro de 7 días
-    const semana = new Date(hoy);
-    semana.setDate(semana.getDate() + 7);
-    const semanaStr = semana.toISOString().split('T')[0];
 
     const pasadas = [];
     const hoyReuniones = [];
     const proximas = [];
 
     reuniones.forEach(r => {
-      const fechaReunion = r.reu_fecha;
+      const fechaNormalizada = normalizarFecha(r.reu_fecha);
       
-      // Verificar si la reunión ya pasó (comparar fecha completa)
-      const fechaObj = new Date(fechaReunion);
-      const hoyObj = new Date();
-      hoyObj.setHours(0, 0, 0, 0);
-      
-      if (fechaReunion < hoyStr) {
+      if (fechaNormalizada < hoyStr) {
         pasadas.push(r);
-      } else if (fechaReunion === hoyStr) {
+      } else if (fechaNormalizada === hoyStr) {
         hoyReuniones.push(r);
       } else {
         proximas.push(r);
       }
     });
 
-    // Ordenar por fecha
     pasadas.sort((a, b) => a.reu_fecha.localeCompare(b.reu_fecha));
     hoyReuniones.sort((a, b) => a.reu_hora.localeCompare(b.reu_hora));
     proximas.sort((a, b) => a.reu_fecha.localeCompare(b.reu_fecha));
@@ -122,6 +127,59 @@ export default function Agenda() {
     }
   };
 
+  // ✅ Formatear fecha relativa (CORREGIDO)
+  const formatearFechaRelativa = (fecha) => {
+    const fechaNormalizada = normalizarFecha(fecha);
+    if (!fechaNormalizada) return null;
+    
+    const hoy = new Date();
+    const hoyStr = hoy.toISOString().split('T')[0];
+    const manana = new Date(hoy);
+    manana.setDate(manana.getDate() + 1);
+    const mananaStr = manana.toISOString().split('T')[0];
+    const pasado = new Date(hoy);
+    pasado.setDate(pasado.getDate() + 2);
+    const pasadoStr = pasado.toISOString().split('T')[0];
+    const ayer = new Date(hoy);
+    ayer.setDate(ayer.getDate() - 1);
+    const ayerStr = ayer.toISOString().split('T')[0];
+
+    if (fechaNormalizada === hoyStr) return { label: 'Hoy', color: COLORS.success };
+    if (fechaNormalizada === mananaStr) return { label: 'Mañana', color: COLORS.primary };
+    if (fechaNormalizada === pasadoStr) return { label: 'Pasado mañana', color: COLORS.warning };
+    if (fechaNormalizada === ayerStr) return { label: 'Ayer', color: COLORS.danger };
+    if (fechaNormalizada < hoyStr) return { label: 'Pasada', color: COLORS.danger };
+    return null;
+  };
+
+  // ✅ Verificar si una reunión es hoy (CORREGIDO)
+  const esReunionHoy = (fecha) => {
+    const fechaNormalizada = normalizarFecha(fecha);
+    if (!fechaNormalizada) return false;
+    const hoy = new Date().toISOString().split('T')[0];
+    return fechaNormalizada === hoy;
+  };
+
+  // ✅ Verificar si una reunión ya pasó (CORREGIDO)
+  const esReunionPasada = (fecha, hora) => {
+    const fechaNormalizada = normalizarFecha(fecha);
+    if (!fechaNormalizada) return false;
+    
+    const hoy = new Date().toISOString().split('T')[0];
+    
+    // Si la fecha es menor que hoy, ya pasó
+    if (fechaNormalizada < hoy) return true;
+    
+    // Si es hoy, verificar la hora
+    if (fechaNormalizada === hoy) {
+      const ahora = new Date();
+      const horaActual = `${String(ahora.getHours()).padStart(2, '0')}:${String(ahora.getMinutes()).padStart(2, '0')}`;
+      return hora < horaActual;
+    }
+    
+    return false;
+  };
+
   // Filtrar por búsqueda
   const filtrarPorBusqueda = (reunionesFiltradas) => {
     if (!busqueda.trim()) return reunionesFiltradas;
@@ -135,78 +193,42 @@ export default function Agenda() {
     );
   };
 
-  // Obtener reuniones finales
-  const obtenerReuniones = () => {
-    const filtradas = filtrarPorCategoria();
-    return filtrarPorBusqueda(filtradas);
-  };
+  const reunionesFinales = filtrarPorBusqueda(filtrarPorCategoria());
 
-  const reunionesFinales = obtenerReuniones();
-
-  // Formatear fecha
+  // Formatear fecha para mostrar
   const formatearFecha = (fecha) => {
-    const opciones = { 
-      weekday: 'long', 
-      year: 'numeric', 
-      month: 'long', 
-      day: 'numeric' 
-    };
-    return new Date(fecha).toLocaleDateString('es-ES', opciones);
+    if (!fecha) return 'Sin fecha';
+    try {
+      const d = new Date(fecha);
+      if (isNaN(d.getTime())) return 'Fecha inválida';
+      const opciones = { 
+        weekday: 'long', 
+        year: 'numeric', 
+        month: 'long', 
+        day: 'numeric' 
+      };
+      return d.toLocaleDateString('es-ES', opciones);
+    } catch (e) {
+      return 'Fecha inválida';
+    }
   };
 
-  // Formatear fecha relativa
-  const formatearFechaRelativa = (fecha) => {
-    const hoy = new Date();
-    const hoyStr = hoy.toISOString().split('T')[0];
-    const manana = new Date(hoy);
-    manana.setDate(manana.getDate() + 1);
-    const mananaStr = manana.toISOString().split('T')[0];
-    const pasado = new Date(hoy);
-    pasado.setDate(pasado.getDate() + 2);
-    const pasadoStr = pasado.toISOString().split('T')[0];
-    const ayer = new Date(hoy);
-    ayer.setDate(ayer.getDate() - 1);
-    const ayerStr = ayer.toISOString().split('T')[0];
-
-    if (fecha === hoyStr) return { label: 'Hoy', color: COLORS.success };
-    if (fecha === mananaStr) return { label: 'Mañana', color: COLORS.primary };
-    if (fecha === pasadoStr) return { label: 'Pasado mañana', color: COLORS.warning };
-    if (fecha === ayerStr) return { label: 'Ayer', color: COLORS.danger };
-    if (fecha < hoyStr) return { label: 'Pasada', color: COLORS.danger };
-    return null;
+  const verDetalles = (reunionId) => {
+    navigate(`/asistente/reunion-detalle/${reunionId}`);
   };
 
-  // Verificar si una reunión es hoy
-  const esReunionHoy = (fecha) => {
-    const hoy = new Date().toISOString().split('T')[0];
-    return fecha === hoy;
-  };
-
-  // Verificar si una reunión ya pasó
-  const esReunionPasada = (fecha, hora) => {
-    const ahora = new Date();
-    const fechaReunion = new Date(`${fecha}T${hora}`);
-    return fechaReunion < ahora;
-  };
-
-  // Redirigir a detalles
-    const verDetalles = (reunionId) => {
-        navigate(`/asistente/reunion-detalle/${reunionId}`);
-};
-
-  // Agrupar reuniones por fecha
   const agruparPorFecha = (reuniones) => {
     const grupos = {};
     reuniones.forEach(r => {
-      if (!grupos[r.reu_fecha]) {
-        grupos[r.reu_fecha] = [];
+      const fechaNormalizada = normalizarFecha(r.reu_fecha);
+      if (!grupos[fechaNormalizada]) {
+        grupos[fechaNormalizada] = [];
       }
-      grupos[r.reu_fecha].push(r);
+      grupos[fechaNormalizada].push(r);
     });
     return grupos;
   };
 
-  // Contar reuniones por categoría
   const contarPorCategoria = () => {
     const { pasadas, hoy, proximas } = clasificarReuniones();
     return { pasadas: pasadas.length, hoy: hoy.length, proximas: proximas.length };
@@ -245,12 +267,11 @@ export default function Agenda() {
           e.currentTarget.style.boxShadow = '0 4px 6px -1px rgba(0,0,0,0.1)';
         }}
       >
-        {/* Badge de estado */}
         <div style={{
           display: 'flex',
+          flexWrap: 'wrap',
           gap: '0.5rem',
-          marginBottom: '0.75rem',
-          flexWrap: 'wrap'
+          marginBottom: '0.75rem'
         }}>
           {pasada && (
             <span style={{
@@ -381,6 +402,8 @@ export default function Agenda() {
       </div>
     );
   };
+
+  // ... resto del componente (return y el resto del código)
 
   return (
     <div style={{ padding: '1.5rem', maxWidth: '1200px', margin: '0 auto' }}>

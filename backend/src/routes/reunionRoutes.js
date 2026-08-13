@@ -14,7 +14,7 @@ const router = express.Router();
 router.get('/', verifyToken, checkRole('Admin', 'Secretaria'), getReuniones);
 // Solo la secretaria puede crear reuniones
 router.post('/', verifyToken, checkRole('Secretaria'), crearReunion);
-//Ver los invitados de la  reunion
+//Ver los invitados actuales de la  reunion y selecionarlo
 router.get('/:id/invitados', verifyToken, checkRole('Secretaria'), getInvitados);
 //actualizar invitados de la reunion
 router.put('/:id/invitados', verifyToken, checkRole('Secretaria'), actualizarInvitados);

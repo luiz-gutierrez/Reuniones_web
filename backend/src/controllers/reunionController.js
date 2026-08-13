@@ -3,6 +3,8 @@ import { pool } from '../config/db.js';
 // GET /api/reuniones  (admin y secretaria)
 async function getReuniones(req, res) {
   try {
+    const userId = req.user.id;
+    
     const [rows] = await pool.query(
       `SELECT 
         re.reu_id,
@@ -12,9 +14,18 @@ async function getReuniones(req, res) {
         re.reu_fecha,
         re.reu_hora,
         re.use_id,
-        u.nombre AS creado_por_nombre
+        u.nombre AS creado_por_nombre,
+        COUNT(a.asi_id) AS total_invitados,
+        SUM(CASE WHEN a.asi_estatus = 'presente' THEN 1 ELSE 0 END) AS presentes,
+        SUM(CASE WHEN a.asi_estatus = 'ausente' THEN 1 ELSE 0 END) AS ausentes,
+        SUM(CASE WHEN a.asi_estatus = 'justificado' THEN 1 ELSE 0 END) AS justificados,
+        SUM(CASE WHEN a.use_id = ? THEN 1 ELSE 0 END) AS soy_invitado
       FROM reuniones re
-      LEFT JOIN users u ON re.use_id = u.id`
+      LEFT JOIN users u ON re.use_id = u.id
+      LEFT JOIN asistencias a ON re.reu_id = a.reu_id
+      GROUP BY re.reu_id
+      ORDER BY re.reu_fecha DESC, re.reu_hora DESC`,
+      [userId]
     );
     
     return res.json(rows);
@@ -122,7 +133,8 @@ async function crearReunion(req, res) {
     });
   }
 }
-// GET /api/reuniones/:id/invitados
+
+// GET /api/reuniones/:id/invitados de la reunion 
 async function getInvitados(req, res) {
   const { id } = req.params;
 
