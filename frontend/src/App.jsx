@@ -10,6 +10,8 @@ import AdminUsuarios from './pages/admin/Usuarios';
 
 import AsistenteInicio from './pages/asistente/Inicio';
 import AsistenteReuniones from './pages/asistente/Reuniones';
+import AsistenteAgenda from './pages/asistente/Agenda';
+import AsistenteReunionDetalle from './pages/asistente/ReunionDetalle';
 
 import JefeDeptoInicio from './pages/jefe_depto/Inicio';
 
@@ -33,12 +35,14 @@ export default function App() {
         </Route>
 
         {/* Rutas de la secretaria */}
-        <Route element={<PrivateRoute allowedRoles={['Asistente']} />}>
+        <Route element={<PrivateRoute allowedRoles={['Secretaria']} />}>
           <Route element={<MainLayout />}>
             <Route path="/asistente/inicio" element={<AsistenteInicio />} />
             <Route path="/asistente/reuniones" element={<AsistenteReuniones />} />
+            <Route path="/asistente/agenda" element={<AsistenteAgenda />} />
+            <Route path="/asistente/reunion-detalle/:id" element={<AsistenteReunionDetalle />} />
           </Route>
-        </Route>
+        </Route>  
 
         {/* Rutas del jefe de departamento */}
         <Route element={<PrivateRoute allowedRoles={['JefeDepto']} />}>

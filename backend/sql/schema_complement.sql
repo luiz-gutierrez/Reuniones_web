@@ -99,7 +99,7 @@ CREATE TABLE `puestos` (
 
 INSERT INTO `puestos` (`pue_id`, `pue_nombre`, `rol_id`, `dep_id`, `pue_padre_id`, `created_at`, `update_at`) VALUES
 (1, 'Gerente general', 1, 24, NULL, '2026-08-12 05:34:54', '2026-08-12 05:34:54'),
-(2, 'Asistente', 2, NULL, 1, '2026-08-12 05:40:02', '2026-08-12 05:40:02'),
+(2, 'Secretaria', 2, NULL, 1, '2026-08-12 05:40:02', '2026-08-12 05:40:02'),
 (3, 'Gerente Administrativo y Finanzas', 3, 1, 1, '2026-08-12 05:40:02', '2026-08-12 05:40:02'),
 (4, 'Gerente Comercial', 3, 2, 1, '2026-08-12 05:40:02', '2026-08-12 05:40:02'),
 (5, 'Gerente Operativo', 3, 3, 1, '2026-08-12 05:40:02', '2026-08-12 05:40:02'),
@@ -161,7 +161,7 @@ CREATE TABLE `roles` (
 
 INSERT INTO `roles` (`rol_id`, `rol_nombre`, `created_at`, `update_at`) VALUES
 (1, 'Admin', '2026-08-12 05:00:21', '2026-08-12 05:00:21'),
-(2, 'Asistente', '2026-08-12 05:00:21', '2026-08-12 05:00:21'),
+(2, 'Secretaria', '2026-08-12 05:00:21', '2026-08-12 05:00:21'),
 (3, 'Gerente', '2026-08-12 05:00:21', '2026-08-12 05:00:21'),
 (4, 'JefeDepto', '2026-08-12 05:00:21', '2026-08-12 15:47:10'),
 (5, 'Auxiliar', '2026-08-12 05:00:21', '2026-08-12 05:00:21');

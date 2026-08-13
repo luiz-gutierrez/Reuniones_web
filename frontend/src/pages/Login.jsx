@@ -7,7 +7,7 @@ import { useAuth } from '../context/AuthContext';
 // ==========================================
 const RUTAS_POR_ROL = {
   Admin: '/admin/inicio',
-  Asistente: '/asistente/inicio',
+  Secretaria: '/asistente/inicio',
   Gerente: '/gerente/inicio',
   JefeDepto: '/jefe_depto/inicio',
   Usuario: '/usuario/inicio'

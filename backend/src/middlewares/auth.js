@@ -21,9 +21,16 @@ async function verifyToken(req, res, next) {
     console.log('✅ Token decodificado:', decoded);
     
     // Obtener información completa del usuario desde la base de datos
+     // ✅ CORREGIDO: Unir users con puestos y roles
     const [rows] = await pool.query(
-      `SELECT u.id, u.nombre, u.apellido, u.telefono, u.correo, u.activo,
-              r.rol_nombre as rol
+      `SELECT 
+        u.id, 
+        u.nombre, 
+        u.apellido, 
+        u.telefono, 
+        u.correo, 
+        u.activo,
+        r.rol_nombre as rol
        FROM users u
        INNER JOIN puestos p ON u.pue_id = p.pue_id
        INNER JOIN roles r ON p.rol_id = r.rol_id

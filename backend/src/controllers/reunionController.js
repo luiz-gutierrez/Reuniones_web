@@ -255,9 +255,147 @@ async function actualizarInvitados(req, res) {
   }
 }
 
+// GET /api/reuniones/:id - Obtener una reunión por ID con todos sus detalles
+async function getReunionById(req, res) {
+  const { id } = req.params;
+
+  // Validar que el ID existe
+  if (!id) {
+    return res.status(400).json({ 
+      message: 'ID de reunión requerido' 
+    });
+  }
+
+  // Validar que el ID sea un número
+  if (isNaN(id) || id <= 0) {
+    return res.status(400).json({ 
+      message: 'ID de reunión inválido' 
+    });
+  }
+
+  try {
+    console.log(`📋 Obteniendo detalles de la reunión ID: ${id}`);
+
+    // 1. Obtener los datos de la reunión
+    const [rows] = await pool.query(
+      `SELECT 
+        re.reu_id,
+        re.reu_nombre,
+        re.reu_descripcion,
+        re.reu_lugar,
+        re.reu_fecha,
+        re.reu_hora,
+        re.use_id,
+        u.nombre AS creador_nombre,
+        u.apellido AS creador_apellido,
+        u.correo AS creador_correo,
+        COUNT(DISTINCT a.asi_id) AS total_invitados,
+        SUM(CASE WHEN a.asi_estatus = 'presente' THEN 1 ELSE 0 END) AS presentes,
+        SUM(CASE WHEN a.asi_estatus = 'ausente' THEN 1 ELSE 0 END) AS ausentes,
+        SUM(CASE WHEN a.asi_estatus = 'justificado' THEN 1 ELSE 0 END) AS justificados
+      FROM reuniones re
+      LEFT JOIN users u ON re.use_id = u.id
+      LEFT JOIN asistencias a ON re.reu_id = a.reu_id
+      WHERE re.reu_id = ?
+      GROUP BY re.reu_id`,
+      [id]
+    );
+
+    // Verificar si la reunión existe
+    if (rows.length === 0) {
+      return res.status(404).json({ 
+        message: 'Reunión no encontrada' 
+      });
+    }
+
+    const reunion = rows[0];
+
+    // 2. Obtener los invitados con sus detalles
+    const [invitados] = await pool.query(
+      `SELECT 
+        a.asi_id,
+        a.asi_estatus,
+        u.id AS user_id,
+        u.nombre,
+        u.apellido,
+        u.correo,
+        u.telefono,
+        u.activo,
+        p.pue_nombre AS puesto,
+        d.dep_nombre AS departamento,
+        r.rol_nombre AS rol
+      FROM asistencias a
+      INNER JOIN users u ON a.use_id = u.id
+      LEFT JOIN puestos p ON u.pue_id = p.pue_id
+      LEFT JOIN departamentos d ON p.dep_id = d.dep_id
+      LEFT JOIN roles r ON p.rol_id = r.rol_id
+      WHERE a.reu_id = ?
+      ORDER BY u.nombre ASC`,
+      [id]
+    );
+
+    // 3. Construir la respuesta completa
+    const response = {
+      reunion: {
+        id: reunion.reu_id,
+        nombre: reunion.reu_nombre,
+        descripcion: reunion.reu_descripcion,
+        lugar: reunion.reu_lugar,
+        fecha: reunion.reu_fecha,
+        hora: reunion.reu_hora,
+        creador: {
+          id: reunion.use_id,
+          nombre: reunion.creador_nombre,
+          apellido: reunion.creador_apellido,
+          correo: reunion.creador_correo
+        },
+        estadisticas: {
+          total_invitados: parseInt(reunion.total_invitados) || 0,
+          presentes: parseInt(reunion.presentes) || 0,
+          ausentes: parseInt(reunion.ausentes) || 0,
+          justificados: parseInt(reunion.justificados) || 0
+        },
+        created_at: reunion.created_at,
+        updated_at: reunion.updated_at
+      },
+      invitados: invitados.map(i => ({
+        asi_id: i.asi_id,
+        estatus: i.asi_estatus,
+        usuario: {
+          id: i.user_id,
+          nombre: i.nombre,
+          apellido: i.apellido,
+          correo: i.correo,
+          telefono: i.telefono,
+          activo: i.activo === 1
+        },
+        puesto: i.puesto,
+        departamento: i.departamento,
+        rol: i.rol,
+        asistencia_registrada: i.asistencia_registrada,
+        asistencia_actualizada: i.asistencia_actualizada
+      }))
+    };
+
+    console.log(`✅ Detalles de reunión ID ${id} cargados correctamente`);
+    console.log(`📊 Total invitados: ${response.reunion.estadisticas.total_invitados}`);
+    
+    return res.status(200).json(response);
+
+  } catch (error) {
+    console.error('❌ Error al obtener reunión por ID:', error);
+    return res.status(500).json({ 
+      message: 'Error interno del servidor al obtener la reunión',
+      error: error.message 
+    });
+  }
+}
+
 export { 
   getReuniones, 
   crearReunion,
   getInvitados,
-  actualizarInvitados
+  actualizarInvitados,
+  getReunionById
+
 };

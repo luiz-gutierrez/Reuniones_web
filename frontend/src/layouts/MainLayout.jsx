@@ -6,9 +6,10 @@ const MENUS = {
     { to: '/admin/inicio', label: 'Inicio' },
     { to: '/admin/usuarios', label: 'Usuarios' }
   ],
-  Asistente: [
+  Secretaria: [
     { to: '/asistente/inicio', label: 'Inicio' },
-    { to: '/asistente/reuniones', label: 'Reuniones' }
+    { to: '/asistente/reuniones', label: 'Reuniones' },
+    { to: '/asistente/agenda', label: 'Agenda' }
   ],
   Usuario: [
     { to: '/usuario/inicio', label: 'Inicio' },
