@@ -3,7 +3,8 @@ import { getReuniones,
          crearReunion,
          getInvitados,  
          actualizarInvitados,
-         getReunionById  } from '../controllers/reunionController.js';
+         getReunionById,
+         actualizarReunion } from '../controllers/reunionController.js';
 import verifyToken from '../middlewares/auth.js';
 import checkRole from '../middlewares/role.js';
 
@@ -20,7 +21,8 @@ router.get('/:id/invitados', verifyToken, checkRole('Secretaria'), getInvitados)
 router.put('/:id/invitados', verifyToken, checkRole('Secretaria'), actualizarInvitados);
 //Obtener una reunión por ID
 router.get('/:id', verifyToken, checkRole( 'Admin', 'Secretaria'), getReunionById);
-
+//Actualizar una reunión por ID
+router.put('/:id', verifyToken, checkRole('Secretaria'), actualizarReunion);
 
 
 

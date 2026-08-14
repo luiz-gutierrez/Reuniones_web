@@ -51,10 +51,10 @@ async function crearReunion(req, res) {
     });
   }
 
-  // ✅ Validar que tenga al menos un invitado
+  // ✅ Validar que tenga al menos 2 invitados
   if (!invitados || !Array.isArray(invitados) || invitados.length === 0) {
     return res.status(400).json({ 
-      message: 'La reunión debe tener al menos un invitado' 
+      message: 'Debes seleccionar al menos 2 invitados para la reunión' 
     });
   }
 
@@ -402,12 +402,54 @@ async function getReunionById(req, res) {
     });
   }
 }
+// PUT /api/reuniones/:id - Actualizar reunión
+async function actualizarReunion(req, res) {
+  const { id } = req.params;
+  const { reu_nombre, reu_descripcion, reu_lugar, reu_fecha, reu_hora } = req.body;
+
+  if (!id) {
+    return res.status(400).json({ message: 'ID de reunión requerido' });
+  }
+
+  if (!reu_nombre || !reu_fecha || !reu_hora) {
+    return res.status(400).json({ 
+      message: 'Nombre, fecha y hora son obligatorios' 
+    });
+  }
+
+  try {
+    const [result] = await pool.query(
+      `UPDATE reuniones 
+       SET reu_nombre = ?, 
+           reu_descripcion = ?, 
+           reu_lugar = ?, 
+           reu_fecha = ?, 
+           reu_hora = ?
+       WHERE reu_id = ?`,
+      [reu_nombre, reu_descripcion, reu_lugar, reu_fecha, reu_hora, id]
+    );
+
+    if (result.affectedRows === 0) {
+      return res.status(404).json({ message: 'Reunión no encontrada' });
+    }
+
+    return res.json({ 
+      message: 'Reunión actualizada correctamente',
+      reunion: { reu_nombre, reu_descripcion, reu_lugar, reu_fecha, reu_hora }
+    });
+
+  } catch (error) {
+    console.error('Error al actualizar reunión:', error);
+    return res.status(500).json({ message: 'Error al actualizar reunión' });
+  }
+}
 
 export { 
   getReuniones, 
   crearReunion,
   getInvitados,
   actualizarInvitados,
-  getReunionById
+  getReunionById,
+  actualizarReunion
 
 };

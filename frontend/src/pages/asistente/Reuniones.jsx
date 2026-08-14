@@ -118,9 +118,9 @@ export default function SecretariaReuniones() {
     setGuardando(true);
     setError('');
 
-    // Validar que haya al menos un invitado
-    if (invitados.length === 0) {
-      setError('Debes seleccionar al menos un invitado para la reunión');
+    // Validar que haya al menos un 2 invitado
+    if (invitados.length === 1) {
+      setError('Debes seleccionar al menos 2 invitados para la reunión');
       setGuardando(false);
       return;
     }

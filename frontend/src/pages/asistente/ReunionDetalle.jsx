@@ -22,7 +22,8 @@ import {
   FaPlus,
   FaSave,
   FaCheckCircle,
-  FaPencilAlt
+  FaPencilAlt,
+  FaTimesCircle
 } from 'react-icons/fa';
 
 export default function ReunionDetalle() {
@@ -41,6 +42,17 @@ export default function ReunionDetalle() {
   const [tareasGuardadas, setTareasGuardadas] = useState([]);
   const [editandoTarea, setEditandoTarea] = useState(null);
   const [mostrarFormulario, setMostrarFormulario] = useState(false);
+
+  // ✅ Estado para el modal de editar reunión
+  const [mostrarModalEditar, setMostrarModalEditar] = useState(false);
+  const [reunionEdit, setReunionEdit] = useState({
+    reu_nombre: '',
+    reu_descripcion: '',
+    reu_lugar: '',
+    reu_fecha: '',
+    reu_hora: ''
+  });
+  const [guardandoReunion, setGuardandoReunion] = useState(false);
 
   useEffect(() => {
     if (id) {
@@ -82,6 +94,99 @@ export default function ReunionDetalle() {
       setTareasGuardadas([]);
     }
   }
+
+  // ========== FUNCIONES PARA EDITAR REUNIÓN ==========
+  const abrirModalEditar = () => {
+    if (reunion) {
+      setReunionEdit({
+        reu_nombre: reunion.nombre || reunion.reu_nombre || '',
+        reu_descripcion: reunion.descripcion || reunion.reu_descripcion || '',
+        reu_lugar: reunion.lugar || reunion.reu_lugar || '',
+        reu_fecha: reunion.fecha || reunion.reu_fecha || '',
+        reu_hora: reunion.hora || reunion.reu_hora || ''
+      });
+      setMostrarModalEditar(true);
+    }
+  };
+
+  const cerrarModalEditar = () => {
+    setMostrarModalEditar(false);
+    setReunionEdit({
+      reu_nombre: '',
+      reu_descripcion: '',
+      reu_lugar: '',
+      reu_fecha: '',
+      reu_hora: ''
+    });
+    setError('');
+  };
+
+  const handleCambioReunion = (e) => {
+    const { name, value } = e.target;
+    setReunionEdit(prev => ({
+      ...prev,
+      [name]: value
+    }));
+  };
+
+  const guardarReunionEditada = async (e) => {
+    e.preventDefault();
+    setGuardandoReunion(true);
+    setError('');
+
+    // Validaciones
+    if (!reunionEdit.reu_nombre.trim()) {
+      setError('El nombre de la reunión es obligatorio');
+      setGuardandoReunion(false);
+      return;
+    }
+
+    if (!reunionEdit.reu_fecha) {
+      setError('La fecha es obligatoria');
+      setGuardandoReunion(false);
+      return;
+    }
+
+    if (!reunionEdit.reu_hora) {
+      setError('La hora es obligatoria');
+      setGuardandoReunion(false);
+      return;
+    }
+
+    try {
+      const reunionId = reunion.id || reunion.reu_id;
+      const response = await api.put(`/reuniones/${reunionId}`, reunionEdit);
+      console.log('✅ Reunión actualizada:', response.data);
+
+      // Actualizar el estado local
+      setReunion({
+        ...reunion,
+        nombre: reunionEdit.reu_nombre,
+        reu_nombre: reunionEdit.reu_nombre,
+        descripcion: reunionEdit.reu_descripcion,
+        reu_descripcion: reunionEdit.reu_descripcion,
+        lugar: reunionEdit.reu_lugar,
+        reu_lugar: reunionEdit.reu_lugar,
+        fecha: reunionEdit.reu_fecha,
+        reu_fecha: reunionEdit.reu_fecha,
+        hora: reunionEdit.reu_hora,
+        reu_hora: reunionEdit.reu_hora
+      });
+
+      setExito(true);
+      cerrarModalEditar();
+      
+      setTimeout(() => {
+        setExito(false);
+      }, 3000);
+
+    } catch (err) {
+      console.error('❌ Error al actualizar reunión:', err);
+      setError(err.response?.data?.message || 'Error al actualizar la reunión');
+    } finally {
+      setGuardandoReunion(false);
+    }
+  };
 
   // ========== FUNCIONES PARA TAREAS ==========
   const agregarTarea = () => {
@@ -280,6 +385,12 @@ export default function ReunionDetalle() {
     return new Date(fecha).toLocaleDateString('es-ES', opciones);
   };
 
+  const formatearFechaInput = (fecha) => {
+    if (!fecha) return '';
+    const date = new Date(fecha);
+    return date.toISOString().split('T')[0];
+  };
+
   const volver = () => {
     navigate('/asistente/agenda');
   };
@@ -316,9 +427,7 @@ export default function ReunionDetalle() {
     );
   };
 
-  // ✅ CORREGIDO: Mostrar los estados exactos de la base de datos
   const getEstadoTareaBadge = (status) => {
-    // Mapeo de colores para cada estado
     const configs = {
       'Iniciar': { color: 'text-blue-700', bg: 'bg-blue-100' },
       'Proceso': { color: 'text-yellow-700', bg: 'bg-yellow-100' },
@@ -326,7 +435,6 @@ export default function ReunionDetalle() {
       'Finalizado': { color: 'text-green-700', bg: 'bg-green-100' }
     };
     
-    // Si el estado no está en el mapeo, usar un color por defecto
     const config = configs[status] || { color: 'text-gray-700', bg: 'bg-gray-100' };
     
     return (
@@ -402,7 +510,11 @@ export default function ReunionDetalle() {
             </p>
           </div>
           <div className="flex gap-2">
-            <button className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-1.5 rounded-md text-sm flex items-center gap-1.5 transition-colors">
+            {/* ✅ Botón Editar con función */}
+            <button 
+              onClick={abrirModalEditar}
+              className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-1.5 rounded-md text-sm flex items-center gap-1.5 transition-colors"
+            >
               <FaEdit size={14} /> Editar
             </button>
           </div>
@@ -463,8 +575,140 @@ export default function ReunionDetalle() {
         )}
       </div>
 
+      {/* ✅ MODAL PARA EDITAR REUNIÓN */}
+      {mostrarModalEditar && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+          <div className="bg-white rounded-xl shadow-2xl max-w-2xl w-full max-h-[90vh] overflow-y-auto">
+            <div className="sticky top-0 bg-white border-b border-gray-200 px-6 py-4 flex justify-between items-center rounded-t-xl">
+              <h3 className="text-xl font-bold text-gray-800 flex items-center gap-2">
+                <FaEdit className="text-blue-600" />
+                Editar Reunión
+              </h3>
+              <button
+                onClick={cerrarModalEditar}
+                className="text-gray-400 hover:text-gray-600 transition-colors"
+              >
+                <FaTimesCircle size={24} />
+              </button>
+            </div>
+
+            <form onSubmit={guardarReunionEditada} className="p-6 space-y-4">
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1.5">
+                  <FaClipboardList className="inline mr-1.5 text-blue-500" />
+                  Nombre de la reunión *
+                </label>
+                <input
+                  type="text"
+                  name="reu_nombre"
+                  value={reunionEdit.reu_nombre}
+                  onChange={handleCambioReunion}
+                  placeholder="Ej: Reunión de equipo"
+                  required
+                  className="w-full px-3.5 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition-shadow text-gray-700 bg-white"
+                />
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1.5">
+                  Descripción
+                </label>
+                <textarea
+                  name="reu_descripcion"
+                  value={reunionEdit.reu_descripcion}
+                  onChange={handleCambioReunion}
+                  placeholder="Descripción de la reunión..."
+                  rows="3"
+                  className="w-full px-3.5 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition-shadow resize-y text-gray-700 bg-white"
+                />
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1.5">
+                  <FaMapMarkerAlt className="inline mr-1.5 text-blue-500" />
+                  Lugar
+                </label>
+                <input
+                  type="text"
+                  name="reu_lugar"
+                  value={reunionEdit.reu_lugar}
+                  onChange={handleCambioReunion}
+                  placeholder="Ej: Sala de juntas 2"
+                  className="w-full px-3.5 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition-shadow text-gray-700 bg-white"
+                />
+              </div>
+
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1.5">
+                    <FaCalendarAlt className="inline mr-1.5 text-blue-500" />
+                    Fecha *
+                  </label>
+                  <input
+                    type="date"
+                    name="reu_fecha"
+                    value={formatearFechaInput(reunionEdit.reu_fecha)}
+                    onChange={handleCambioReunion}
+                    required
+                    className="w-full px-3.5 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition-shadow text-gray-700 bg-white"
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1.5">
+                    <FaClock className="inline mr-1.5 text-blue-500" />
+                    Hora *
+                  </label>
+                  <input
+                    type="time"
+                    name="reu_hora"
+                    value={reunionEdit.reu_hora}
+                    onChange={handleCambioReunion}
+                    required
+                    className="w-full px-3.5 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition-shadow text-gray-700 bg-white"
+                  />
+                </div>
+              </div>
+
+              {error && (
+                <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-lg flex items-center gap-2">
+                  <FaTimes className="text-red-500 flex-shrink-0" />
+                  <span>{error}</span>
+                </div>
+              )}
+
+              <div className="flex gap-3 pt-2">
+                <button
+                  type="button"
+                  onClick={cerrarModalEditar}
+                  className="px-6 py-2.5 bg-white text-gray-700 border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors font-medium"
+                >
+                  Cancelar
+                </button>
+                <button
+                  type="submit"
+                  disabled={guardandoReunion}
+                  className="flex-1 px-8 py-2.5 bg-blue-600 hover:bg-blue-700 text-white rounded-lg font-medium transition-colors flex items-center justify-center gap-2 disabled:opacity-60 disabled:cursor-not-allowed"
+                >
+                  {guardandoReunion ? (
+                    <>
+                      <FaSpinner className="animate-spin" />
+                      Guardando...
+                    </>
+                  ) : (
+                    <>
+                      <FaSave /> Guardar Cambios
+                    </>
+                  )}
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+
       {/* ✅ SECCIÓN DE TAREAS GUARDADAS */}
-      {tareasGuardadas.length > 0 && (
+
         <div className="bg-white rounded-lg p-6 shadow-sm mb-6">
           <div className="flex items-center gap-2 mb-4">
             <FaTasks className="text-green-600 text-xl" />
@@ -488,7 +732,6 @@ export default function ReunionDetalle() {
                       <h4 className="font-semibold text-gray-800">
                         {tarea.tar_nombre}
                       </h4>
-                      {/* ✅ Mostrar el estado exacto de la base de datos */}
                       {getEstadoTareaBadge(tarea.tar_estatus)}
                     </div>
                     <p className="text-sm text-gray-600 mt-1">
@@ -506,7 +749,6 @@ export default function ReunionDetalle() {
                     </div>
                   </div>
                   <div className="flex gap-2 flex-shrink-0">
-                    {/* ✅ Solo botones de Editar y Eliminar */}
                     <button
                       onClick={() => editarTareaGuardada(tarea)}
                       className="px-3 py-1.5 bg-blue-100 text-blue-700 hover:bg-blue-200 rounded-md text-xs font-medium flex items-center gap-1 transition-colors"
@@ -523,19 +765,9 @@ export default function ReunionDetalle() {
                 </div>
               </div>
             ))}
-          </div>
-        </div>
-      )}
-
-      {/* ✅ FORMULARIO DE TAREAS */}
-      {(mostrarFormulario || tareas.length > 0) && (
+                  {/* ✅ FORMULARIO DE TAREAS */}
         <div id="formulario-tareas" className="bg-white rounded-lg p-6 shadow-sm mb-6">
-          <div className="flex items-center justify-between mb-4">
             <div className="flex items-center gap-2">
-              <FaTasks className="text-blue-600 text-xl" />
-              <h3 className="text-lg font-semibold text-gray-800 m-0">
-                {editandoTarea ? 'Editar Tarea' : 'Asignar Tareas'}
-              </h3>
               {editandoTarea && (
                 <span className="text-xs bg-yellow-100 text-yellow-700 px-2 py-0.5 rounded-full">
                   Editando
@@ -551,7 +783,7 @@ export default function ReunionDetalle() {
                 Cancelar
               </button>
             )}
-          </div>
+
 
           <form onSubmit={editandoTarea ? actualizarTareaGuardada : guardarTareas} className="space-y-4">
             {tareas.map((tarea, index) => (
@@ -727,7 +959,11 @@ export default function ReunionDetalle() {
             </div>
           </form>
         </div>
-      )}
+          </div>
+        </div>
+
+
+
 
       {/* Botón para agregar nueva tarea cuando ya hay tareas guardadas */}
       {tareasGuardadas.length > 0 && !mostrarFormulario && tareas.length === 0 && (
@@ -802,11 +1038,11 @@ export default function ReunionDetalle() {
                       </div>
                     </div>
 
-                    <div className="mt-2 pt-2 border-t border-gray-200 flex flex-wrap gap-1">
+                    <div className="mt-3 pt-3 border-t border-gray-200 flex flex-wrap gap-1.5">
                       <button
                         onClick={() => actualizarEstadoAsistencia(asiId, 'presente')}
                         disabled={actualizando || estatus === 'presente'}
-                        className={`px-3 py-0.5 rounded-md text-xs font-medium flex items-center gap-1 transition-colors ${
+                        className={`px-3 py-0.5 rounded-md text-xs font-medium flex items-center gap-1.5 transition-colors ${
                           estatus === 'presente'
                             ? 'bg-green-100 text-green-700 cursor-default'
                             : 'bg-gray-200 text-gray-600 hover:bg-green-100 hover:text-green-700'
@@ -817,7 +1053,7 @@ export default function ReunionDetalle() {
                       <button
                         onClick={() => actualizarEstadoAsistencia(asiId, 'ausente')}
                         disabled={actualizando || estatus === 'ausente'}
-                        className={`px-3 py-0.5 rounded-md text-xs font-medium flex items-center gap-1 transition-colors ${
+                        className={`px-3 py-0.5 rounded-md text-xs font-medium flex items-center gap-1.5 transition-colors ${
                           estatus === 'ausente'
                             ? 'bg-red-100 text-red-700 cursor-default'
                             : 'bg-gray-200 text-gray-600 hover:bg-red-100 hover:text-red-700'
@@ -825,13 +1061,24 @@ export default function ReunionDetalle() {
                       >
                         <FaTimes size={10} /> Ausente
                       </button>
+                      <button
+                        onClick={() => actualizarEstadoAsistencia(asiId, 'justificado')}
+                        disabled={actualizando || estatus === 'justificado'}
+                        className={`px-3 py-0.5 rounded-md text-xs font-medium flex items-center gap-1.5 transition-colors ${
+                          estatus === 'justificado'
+                            ? 'bg-yellow-100 text-yellow-700 cursor-default'
+                            : 'bg-gray-200 text-gray-600 hover:bg-yellow-100 hover:text-yellow-700'
+                        }`}
+                      >
+                        <FaUserCheck size={10} /> Justificado
+                      </button>
                     </div>
                   </div>
                 );
               })}
             </div>
 
-            <div className="mt-4 pt-4 border-t border-gray-200 grid grid-cols-2 gap-3 text-center">
+            <div className="mt-4 pt-4 border-t border-gray-200 grid grid-cols-3 gap-3 text-center">
               <div className="bg-green-100 p-3 rounded-lg">
                 <div className="text-2xl font-bold text-green-700">
                   {invitados.filter(i => (i.estatus || i.asi_estatus || '').toLowerCase() === 'presente').length}
@@ -843,6 +1090,12 @@ export default function ReunionDetalle() {
                   {invitados.filter(i => (i.estatus || i.asi_estatus || '').toLowerCase() === 'ausente').length}
                 </div>
                 <div className="text-xs text-red-700">Ausentes</div>
+              </div>
+              <div className="bg-yellow-100 p-3 rounded-lg">
+                <div className="text-2xl font-bold text-yellow-700">
+                  {invitados.filter(i => (i.estatus || i.asi_estatus || '').toLowerCase() === 'justificado').length}
+                </div>
+                <div className="text-xs text-yellow-700">Justificados</div>
               </div>
             </div>
           </>

@@ -43,7 +43,6 @@ export default function Agenda() {
       const { data } = await api.get('/reuniones');
       console.log('📋 Reuniones cargadas:', data);
       
-      // Mostrar las fechas para depuración
       data.forEach(r => {
         console.log(`📅 Reunión: ${r.reu_nombre}, Fecha: ${r.reu_fecha}, Tipo: ${typeof r.reu_fecha}`);
       });
@@ -56,22 +55,17 @@ export default function Agenda() {
     }
   }
 
-  // ✅ Función para normalizar fecha (obtener solo YYYY-MM-DD)
   const normalizarFecha = (fecha) => {
     if (!fecha) return '';
-    // Si es un string ISO (2026-08-13T06:00:00.000Z)
     if (typeof fecha === 'string' && fecha.includes('T')) {
       return fecha.split('T')[0];
     }
-    // Si es un objeto Date
     if (fecha instanceof Date) {
       return fecha.toISOString().split('T')[0];
     }
-    // Si ya es YYYY-MM-DD
     if (typeof fecha === 'string' && fecha.match(/^\d{4}-\d{2}-\d{2}$/)) {
       return fecha;
     }
-    // Si es otro formato, intentar convertirlo
     try {
       const d = new Date(fecha);
       if (!isNaN(d.getTime())) {
@@ -83,7 +77,6 @@ export default function Agenda() {
     return fecha;
   };
 
-  // Clasificar reuniones por categoría
   const clasificarReuniones = () => {
     const hoy = new Date();
     const hoyStr = hoy.toISOString().split('T')[0];
@@ -111,7 +104,6 @@ export default function Agenda() {
     return { pasadas, hoy: hoyReuniones, proximas };
   };
 
-  // Filtrar por categoría
   const filtrarPorCategoria = () => {
     const { pasadas, hoy, proximas } = clasificarReuniones();
     
@@ -127,7 +119,6 @@ export default function Agenda() {
     }
   };
 
-  // ✅ Formatear fecha relativa (CORREGIDO)
   const formatearFechaRelativa = (fecha) => {
     const fechaNormalizada = normalizarFecha(fecha);
     if (!fechaNormalizada) return null;
@@ -152,7 +143,6 @@ export default function Agenda() {
     return null;
   };
 
-  // ✅ Verificar si una reunión es hoy (CORREGIDO)
   const esReunionHoy = (fecha) => {
     const fechaNormalizada = normalizarFecha(fecha);
     if (!fechaNormalizada) return false;
@@ -160,17 +150,14 @@ export default function Agenda() {
     return fechaNormalizada === hoy;
   };
 
-  // ✅ Verificar si una reunión ya pasó (CORREGIDO)
   const esReunionPasada = (fecha, hora) => {
     const fechaNormalizada = normalizarFecha(fecha);
     if (!fechaNormalizada) return false;
     
     const hoy = new Date().toISOString().split('T')[0];
     
-    // Si la fecha es menor que hoy, ya pasó
     if (fechaNormalizada < hoy) return true;
     
-    // Si es hoy, verificar la hora
     if (fechaNormalizada === hoy) {
       const ahora = new Date();
       const horaActual = `${String(ahora.getHours()).padStart(2, '0')}:${String(ahora.getMinutes()).padStart(2, '0')}`;
@@ -180,7 +167,6 @@ export default function Agenda() {
     return false;
   };
 
-  // Filtrar por búsqueda
   const filtrarPorBusqueda = (reunionesFiltradas) => {
     if (!busqueda.trim()) return reunionesFiltradas;
     
@@ -195,23 +181,23 @@ export default function Agenda() {
 
   const reunionesFinales = filtrarPorBusqueda(filtrarPorCategoria());
 
-  // Formatear fecha para mostrar
   const formatearFecha = (fecha) => {
-    if (!fecha) return 'Sin fecha';
-    try {
-      const d = new Date(fecha);
-      if (isNaN(d.getTime())) return 'Fecha inválida';
-      const opciones = { 
-        weekday: 'long', 
-        year: 'numeric', 
-        month: 'long', 
-        day: 'numeric' 
-      };
-      return d.toLocaleDateString('es-ES', opciones);
-    } catch (e) {
-      return 'Fecha inválida';
-    }
-  };
+  if (!fecha) return 'Sin fecha';
+  try {
+    const fechaNormalizada = normalizarFecha(fecha);
+    if (!fechaNormalizada) return 'Fecha inválida';
+    const [anio, mes, dia] = fechaNormalizada.split('-');
+    const d = new Date(anio, mes - 1, dia);
+    return d.toLocaleDateString('es-ES', {
+      weekday: 'long',
+      year: 'numeric',
+      month: 'long',
+      day: 'numeric'
+    });
+  } catch (e) {
+    return 'Fecha inválida';
+  }
+};
 
   const verDetalles = (reunionId) => {
     navigate(`/asistente/reunion-detalle/${reunionId}`);
@@ -242,355 +228,166 @@ export default function Agenda() {
     const fechaRelativa = formatearFechaRelativa(reunion.reu_fecha);
     const esHoy = esReunionHoy(reunion.reu_fecha);
 
+    const borderColor = pasada ? COLORS.danger : esHoy ? COLORS.success : COLORS.primary;
+
     return (
       <div
         key={reunion.reu_id}
         onClick={() => verDetalles(reunion.reu_id)}
-        style={{
-          backgroundColor: 'white',
-          borderRadius: '1rem',
-          padding: '1.5rem',
-          boxShadow: '0 4px 6px -1px rgba(0,0,0,0.1)',
-          transition: 'all 0.3s',
-          borderLeft: `4px solid ${pasada ? COLORS.danger : esHoy ? COLORS.success : COLORS.primary}`,
-          cursor: 'pointer',
-          opacity: pasada ? 0.7 : 1,
-          position: 'relative',
-          marginBottom: '1rem'
-        }}
+        className="bg-white rounded-2xl p-6 shadow-md hover:shadow-xl transition-all duration-300 cursor-pointer mb-4 relative"
+        style={{ borderLeft: `4px solid ${borderColor}`, opacity: pasada ? 0.7 : 1 }}
         onMouseEnter={(e) => {
           e.currentTarget.style.transform = 'translateX(4px)';
-          e.currentTarget.style.boxShadow = '0 10px 15px -3px rgba(0,0,0,0.2)';
         }}
         onMouseLeave={(e) => {
           e.currentTarget.style.transform = 'translateX(0)';
-          e.currentTarget.style.boxShadow = '0 4px 6px -1px rgba(0,0,0,0.1)';
         }}
       >
-        <div style={{
-          display: 'flex',
-          flexWrap: 'wrap',
-          gap: '0.5rem',
-          marginBottom: '0.75rem'
-        }}>
+        <div className="flex flex-wrap gap-2 mb-3">
           {pasada && (
-            <span style={{
-              backgroundColor: '#FEE2E2',
-              color: '#991B1B',
-              padding: '0.2rem 0.75rem',
-              borderRadius: '9999px',
-              fontSize: '0.65rem',
-              fontWeight: 600
-            }}>
+            <span className="bg-red-100 text-red-800 px-3 py-0.5 rounded-full text-xs font-semibold">
               Finalizada
             </span>
           )}
           {fechaRelativa && !pasada && (
-            <span style={{
-              backgroundColor: fechaRelativa.color + '20',
-              color: fechaRelativa.color,
-              padding: '0.2rem 0.75rem',
-              borderRadius: '9999px',
-              fontSize: '0.65rem',
-              fontWeight: 600
-            }}>
+            <span 
+              className="px-3 py-0.5 rounded-full text-xs font-semibold"
+              style={{ backgroundColor: fechaRelativa.color + '20', color: fechaRelativa.color }}
+            >
               {fechaRelativa.label}
             </span>
           )}
           {reunion.total_invitados > 0 && (
-            <span style={{
-              backgroundColor: '#DBEAFE',
-              color: '#1E40AF',
-              padding: '0.2rem 0.75rem',
-              borderRadius: '9999px',
-              fontSize: '0.65rem',
-              fontWeight: 500,
-              display: 'flex',
-              alignItems: 'center',
-              gap: '0.25rem'
-            }}>
+            <span className="bg-blue-100 text-blue-800 px-3 py-0.5 rounded-full text-xs font-medium flex items-center gap-1">
               <FaUsers size={10} />
               {reunion.total_invitados} invitados
             </span>
           )}
         </div>
 
-        <h3 style={{
-          fontSize: '1.125rem',
-          fontWeight: '600',
-          color: COLORS.secondary,
-          margin: '0 0 0.5rem 0'
-        }}>
+        <h3 className="text-lg font-semibold text-gray-800 mb-2">
           {reunion.reu_nombre}
         </h3>
 
-        <div style={{
-          display: 'flex',
-          flexDirection: 'column',
-          gap: '0.5rem'
-        }}>
-          <div style={{
-            display: 'flex',
-            alignItems: 'center',
-            gap: '0.5rem',
-            color: COLORS.secondary,
-            fontSize: '0.875rem'
-          }}>
-            <FaCalendarAlt style={{ color: COLORS.primary, fontSize: '0.875rem' }} />
+        <div className="flex flex-col gap-2">
+          <div className="flex items-center gap-2 text-gray-700 text-sm">
+            <FaCalendarAlt className="text-blue-600 text-sm" />
             <span>{formatearFecha(reunion.reu_fecha)}</span>
           </div>
 
-          <div style={{
-            display: 'flex',
-            alignItems: 'center',
-            gap: '0.5rem',
-            color: COLORS.secondary,
-            fontSize: '0.875rem'
-          }}>
-            <FaClock style={{ color: COLORS.primary, fontSize: '0.875rem' }} />
+          <div className="flex items-center gap-2 text-gray-700 text-sm">
+            <FaClock className="text-blue-600 text-sm" />
             <span>{reunion.reu_hora}</span>
           </div>
 
-          <div style={{
-            display: 'flex',
-            alignItems: 'center',
-            gap: '0.5rem',
-            color: COLORS.secondary,
-            fontSize: '0.875rem'
-          }}>
-            <FaMapMarkerAlt style={{ color: COLORS.primary, fontSize: '0.875rem' }} />
+          <div className="flex items-center gap-2 text-gray-700 text-sm">
+            <FaMapMarkerAlt className="text-blue-600 text-sm" />
             <span>{reunion.reu_lugar || 'Sin lugar definido'}</span>
           </div>
 
           {reunion.reu_descripcion && (
-            <p style={{
-              fontSize: '0.875rem',
-              color: COLORS.secondary,
-              opacity: 0.6,
-              margin: '0.25rem 0 0 0',
-              display: '-webkit-box',
-              WebkitLineClamp: 2,
-              WebkitBoxOrient: 'vertical',
-              overflow: 'hidden'
-            }}>
+            <p className="text-sm text-gray-600 opacity-60 mt-1 mb-0 line-clamp-2">
               {reunion.reu_descripcion}
             </p>
           )}
 
-          <div style={{
-            display: 'flex',
-            justifyContent: 'space-between',
-            alignItems: 'center',
-            marginTop: '0.5rem',
-            paddingTop: '0.5rem',
-            borderTop: `1px solid ${COLORS.accent}`
-          }}>
-            <div style={{
-              display: 'flex',
-              alignItems: 'center',
-              gap: '0.5rem',
-              color: COLORS.secondary,
-              fontSize: '0.75rem',
-              opacity: 0.6
-            }}>
-              <FaUser style={{ color: COLORS.primary }} />
+          <div className="flex justify-between items-center mt-2 pt-2 border-t border-gray-100">
+            <div className="flex items-center gap-2 text-gray-600 text-xs opacity-60">
+              <FaUser className="text-blue-600" />
               <span>{reunion.creado_por_nombre || 'Sin creador'}</span>
             </div>
-            <FaChevronRight style={{ fontSize: '0.875rem', color: COLORS.primary, opacity: 0.4 }} />
+            <FaChevronRight className="text-blue-600 text-sm opacity-40" />
           </div>
         </div>
       </div>
     );
   };
 
-  // ... resto del componente (return y el resto del código)
-
   return (
-    <div style={{ padding: '1.5rem', maxWidth: '1200px', margin: '0 auto' }}>
+    <div className="p-6 max-w-6xl mx-auto">
       {/* Header */}
-      <div style={{
-        display: 'flex',
-        justifyContent: 'space-between',
-        alignItems: 'center',
-        flexWrap: 'wrap',
-        gap: '1rem',
-        marginBottom: '1.5rem'
-      }}>
+      <div className="flex justify-between items-center flex-wrap gap-4 mb-6">
         <div>
-          <h1 style={{ fontSize: '1.875rem', fontWeight: 'bold', color: COLORS.secondary, margin: 0 }}>
+          <h1 className="text-3xl font-bold text-gray-800 m-0">
             📅 Agenda
           </h1>
-          <p style={{ color: COLORS.secondary, opacity: 0.6, margin: '0.25rem 0 0 0' }}>
+          <p className="text-gray-600 opacity-60 m-0 mt-1">
             Visualiza todas tus reuniones organizadas por fecha
           </p>
         </div>
         <button
           onClick={cargarReuniones}
-          style={{
-            padding: '0.5rem 1rem',
-            backgroundColor: COLORS.primary,
-            color: 'white',
-            border: 'none',
-            borderRadius: '0.5rem',
-            cursor: 'pointer',
-            fontSize: '0.875rem',
-            transition: 'all 0.2s'
-          }}
-          onMouseEnter={(e) => e.currentTarget.style.opacity = '0.8'}
-          onMouseLeave={(e) => e.currentTarget.style.opacity = '1'}
+          className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg text-sm transition-all duration-200"
         >
           Actualizar
         </button>
       </div>
 
       {/* Resumen de categorías */}
-      <div style={{
-        display: 'grid',
-        gridTemplateColumns: 'repeat(auto-fit, minmax(150px, 1fr))',
-        gap: '1rem',
-        marginBottom: '1.5rem'
-      }}>
+      <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-4 mb-6">
         <div
           onClick={() => setFiltroCategoria('todas')}
-          style={{
-            backgroundColor: filtroCategoria === 'todas' ? COLORS.primary : 'white',
-            color: filtroCategoria === 'todas' ? 'white' : COLORS.secondary,
-            padding: '1rem',
-            borderRadius: '0.75rem',
-            textAlign: 'center',
-            cursor: 'pointer',
-            boxShadow: '0 1px 3px rgba(0,0,0,0.1)',
-            transition: 'all 0.2s'
-          }}
-          onMouseEnter={(e) => {
-            if (filtroCategoria !== 'todas') {
-              e.currentTarget.style.transform = 'scale(1.02)';
-            }
-          }}
-          onMouseLeave={(e) => {
-            e.currentTarget.style.transform = 'scale(1)';
-          }}
+          className={`p-4 rounded-xl text-center cursor-pointer transition-all duration-200 shadow-sm hover:scale-[1.02] ${
+            filtroCategoria === 'todas'
+              ? 'bg-blue-600 text-white'
+              : 'bg-white text-gray-800 hover:bg-gray-50'
+          }`}
         >
-
-          <div style={{ fontWeight: 'bold' }}>Todas</div>
-          <div style={{ fontSize: '0.875rem', opacity: 0.7 }}>{reuniones.length}</div>
+          <div className="font-bold">Todas</div>
+          <div className="text-sm opacity-70">{reuniones.length}</div>
         </div>
 
         <div
           onClick={() => setFiltroCategoria('hoy')}
-          style={{
-            backgroundColor: filtroCategoria === 'hoy' ? COLORS.success : 'white',
-            color: filtroCategoria === 'hoy' ? 'white' : COLORS.secondary,
-            padding: '1rem',
-            borderRadius: '0.75rem',
-            textAlign: 'center',
-            cursor: 'pointer',
-            boxShadow: '0 1px 3px rgba(0,0,0,0.1)',
-            transition: 'all 0.2s'
-          }}
-          onMouseEnter={(e) => {
-            if (filtroCategoria !== 'hoy') {
-              e.currentTarget.style.transform = 'scale(1.02)';
-            }
-          }}
-          onMouseLeave={(e) => {
-            e.currentTarget.style.transform = 'scale(1)';
-          }}
+          className={`p-4 rounded-xl text-center cursor-pointer transition-all duration-200 shadow-sm hover:scale-[1.02] ${
+            filtroCategoria === 'hoy'
+              ? 'bg-green-500 text-white'
+              : 'bg-white text-gray-800 hover:bg-gray-50'
+          }`}
         >
-          
-          <div style={{ fontWeight: 'bold' }}>Hoy</div>
-          <div style={{ fontSize: '0.875rem', opacity: 0.7 }}>{clasificarReuniones().hoy.length}</div>
+          <div className="font-bold">Hoy</div>
+          <div className="text-sm opacity-70">{clasificarReuniones().hoy.length}</div>
         </div>
 
         <div
           onClick={() => setFiltroCategoria('proximas')}
-          style={{
-            backgroundColor: filtroCategoria === 'proximas' ? COLORS.primary : 'white',
-            color: filtroCategoria === 'proximas' ? 'white' : COLORS.secondary,
-            padding: '1rem',
-            borderRadius: '0.75rem',
-            textAlign: 'center',
-            cursor: 'pointer',
-            boxShadow: '0 1px 3px rgba(0,0,0,0.1)',
-            transition: 'all 0.2s'
-          }}
-          onMouseEnter={(e) => {
-            if (filtroCategoria !== 'proximas') {
-              e.currentTarget.style.transform = 'scale(1.02)';
-            }
-          }}
-          onMouseLeave={(e) => {
-            e.currentTarget.style.transform = 'scale(1)';
-          }}
+          className={`p-4 rounded-xl text-center cursor-pointer transition-all duration-200 shadow-sm hover:scale-[1.02] ${
+            filtroCategoria === 'proximas'
+              ? 'bg-blue-600 text-white'
+              : 'bg-white text-gray-800 hover:bg-gray-50'
+          }`}
         >
-
-          <div style={{ fontWeight: 'bold' }}>Próximas</div>
-          <div style={{ fontSize: '0.875rem', opacity: 0.7 }}>{clasificarReuniones().proximas.length}</div>
+          <div className="font-bold">Próximas</div>
+          <div className="text-sm opacity-70">{clasificarReuniones().proximas.length}</div>
         </div>
 
         <div
           onClick={() => setFiltroCategoria('pasadas')}
-          style={{
-            backgroundColor: filtroCategoria === 'pasadas' ? COLORS.danger : 'white',
-            color: filtroCategoria === 'pasadas' ? 'white' : COLORS.secondary,
-            padding: '1rem',
-            borderRadius: '0.75rem',
-            textAlign: 'center',
-            cursor: 'pointer',
-            boxShadow: '0 1px 3px rgba(0,0,0,0.1)',
-            transition: 'all 0.2s'
-          }}
-          onMouseEnter={(e) => {
-            if (filtroCategoria !== 'pasadas') {
-              e.currentTarget.style.transform = 'scale(1.02)';
-            }
-          }}
-          onMouseLeave={(e) => {
-            e.currentTarget.style.transform = 'scale(1)';
-          }}
+          className={`p-4 rounded-xl text-center cursor-pointer transition-all duration-200 shadow-sm hover:scale-[1.02] ${
+            filtroCategoria === 'pasadas'
+              ? 'bg-red-500 text-white'
+              : 'bg-white text-gray-800 hover:bg-gray-50'
+          }`}
         >
-
-          <div style={{ fontWeight: 'bold' }}>Pasadas</div>
-          <div style={{ fontSize: '0.875rem', opacity: 0.7 }}>{clasificarReuniones().pasadas.length}</div>
+          <div className="font-bold">Pasadas</div>
+          <div className="text-sm opacity-70">{clasificarReuniones().pasadas.length}</div>
         </div>
       </div>
 
       {/* Buscador */}
-      <div style={{
-        backgroundColor: 'white',
-        borderRadius: '0.75rem',
-        padding: '0.75rem 1rem',
-        marginBottom: '1.5rem',
-        boxShadow: '0 1px 3px rgba(0,0,0,0.1)',
-        display: 'flex',
-        alignItems: 'center',
-        gap: '0.75rem'
-      }}>
-        <FaSearch style={{ color: COLORS.secondary, opacity: 0.4 }} />
+      <div className="bg-white rounded-xl p-3 px-4 mb-6 shadow-sm flex items-center gap-3">
+        <FaSearch className="text-gray-400" />
         <input
           type="text"
           placeholder="Buscar reuniones por nombre, lugar, creador..."
           value={busqueda}
           onChange={(e) => setBusqueda(e.target.value)}
-          style={{
-            flex: 1,
-            border: 'none',
-            outline: 'none',
-            fontSize: '0.875rem',
-            color: COLORS.secondary,
-            background: 'transparent'
-          }}
+          className="flex-1 border-none outline-none text-sm text-gray-800 bg-transparent"
         />
         {busqueda && (
           <button
             onClick={() => setBusqueda('')}
-            style={{
-              background: 'none',
-              border: 'none',
-              color: COLORS.secondary,
-              opacity: 0.4,
-              cursor: 'pointer'
-            }}
+            className="bg-none border-none text-gray-400 hover:text-gray-600 cursor-pointer"
           >
             <FaTimes />
           </button>
@@ -599,27 +396,15 @@ export default function Agenda() {
 
       {/* Estado de carga */}
       {cargando && (
-        <div style={{
-          textAlign: 'center',
-          padding: '3rem',
-          color: COLORS.secondary,
-          opacity: 0.6
-        }}>
-          <FaSpinner style={{ fontSize: '2rem', animation: 'spin 1s linear infinite' }} />
-          <p style={{ marginTop: '0.5rem' }}>Cargando reuniones...</p>
+        <div className="text-center py-12 text-gray-600 opacity-60">
+          <FaSpinner className="text-4xl mx-auto animate-spin" />
+          <p className="mt-2">Cargando reuniones...</p>
         </div>
       )}
 
       {/* Error */}
       {error && (
-        <div style={{
-          backgroundColor: '#FEE2E2',
-          border: '1px solid #FCA5A5',
-          color: '#991B1B',
-          padding: '1rem',
-          borderRadius: '0.75rem',
-          marginBottom: '1.5rem'
-        }}>
+        <div className="bg-red-100 border border-red-300 text-red-800 p-4 rounded-xl mb-6">
           {error}
         </div>
       )}
@@ -628,20 +413,14 @@ export default function Agenda() {
       {!cargando && !error && (
         <>
           {reunionesFinales.length === 0 ? (
-            <div style={{
-              textAlign: 'center',
-              padding: '4rem',
-              backgroundColor: 'white',
-              borderRadius: '1rem',
-              boxShadow: '0 4px 6px -1px rgba(0,0,0,0.1)'
-            }}>
-              <div style={{ fontSize: '4rem', marginBottom: '1rem' }}>📭</div>
-              <h2 style={{ fontSize: '1.5rem', color: COLORS.secondary, margin: 0 }}>
+            <div className="text-center py-16 bg-white rounded-2xl shadow-md">
+              <div className="text-6xl mb-4">📭</div>
+              <h2 className="text-2xl text-gray-800 m-0">
                 No hay reuniones {filtroCategoria === 'hoy' ? 'para hoy' : 
                                 filtroCategoria === 'proximas' ? 'próximas' : 
                                 filtroCategoria === 'pasadas' ? 'pasadas' : 'programadas'}
               </h2>
-              <p style={{ color: COLORS.secondary, opacity: 0.6, marginTop: '0.5rem' }}>
+              <p className="text-gray-600 opacity-60 mt-2">
                 {busqueda ? 'No se encontraron reuniones que coincidan con tu búsqueda' : 
                  filtroCategoria === 'hoy' ? 'Disfruta tu día sin reuniones' : 
                  'Pronto se programarán nuevas reuniones'}
@@ -650,7 +429,6 @@ export default function Agenda() {
           ) : (
             <div>
               {filtroCategoria === 'todas' ? (
-                // Mostrar agrupado por fecha cuando están todas
                 Object.entries(agruparPorFecha(reunionesFinales))
                   .sort((a, b) => a[0].localeCompare(b[0]))
                   .map(([fecha, reunionesDelDia]) => {
@@ -659,41 +437,20 @@ export default function Agenda() {
                     const esPasada = fecha < new Date().toISOString().split('T')[0];
                     
                     return (
-                      <div key={fecha} style={{ marginBottom: '2rem' }}>
-                        <div style={{
-                          display: 'flex',
-                          alignItems: 'center',
-                          gap: '0.75rem',
-                          marginBottom: '1rem'
-                        }}>
-                          <h2 style={{
-                            fontSize: '1.25rem',
-                            fontWeight: '600',
-                            color: COLORS.secondary,
-                            margin: 0
-                          }}>
+                      <div key={fecha} className="mb-8">
+                        <div className="flex items-center gap-3 mb-4">
+                          <h2 className="text-xl font-semibold text-gray-800 m-0">
                             {formatearFecha(fecha)}
                           </h2>
                           {fechaRelativa && (
-                            <span style={{
-                              backgroundColor: fechaRelativa.color + '20',
-                              color: fechaRelativa.color,
-                              padding: '0.25rem 0.75rem',
-                              borderRadius: '9999px',
-                              fontSize: '0.75rem',
-                              fontWeight: 500
-                            }}>
+                            <span 
+                              className="px-3 py-1 rounded-full text-xs font-medium"
+                              style={{ backgroundColor: fechaRelativa.color + '20', color: fechaRelativa.color }}
+                            >
                               {fechaRelativa.label}
                             </span>
                           )}
-                          <span style={{
-                            backgroundColor: COLORS.accent,
-                            color: COLORS.secondary,
-                            padding: '0.25rem 0.75rem',
-                            borderRadius: '9999px',
-                            fontSize: '0.75rem',
-                            opacity: 0.6
-                          }}>
+                          <span className="bg-gray-100 text-gray-600 px-3 py-1 rounded-full text-xs opacity-60">
                             {reunionesDelDia.length} reuniones
                           </span>
                         </div>
@@ -702,7 +459,6 @@ export default function Agenda() {
                     );
                   })
               ) : (
-                // Mostrar sin agrupar cuando hay filtro
                 reunionesFinales.map(r => renderReunionCard(r))
               )}
             </div>
