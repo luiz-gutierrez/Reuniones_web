@@ -69,9 +69,7 @@ async function getTareasByReunion(req, res) {
         t.tar_nombre,
         t.tar_descripcion,
         t.tar_fecha,
-        t.tar_estado,
-        t.created_at,
-        t.updated_at,
+        t.tar_estatus,
         t.use_id,
         u.nombre as usuario_nombre,
         u.apellido as usuario_apellido,
@@ -88,6 +86,100 @@ async function getTareasByReunion(req, res) {
     console.error('Error al obtener tareas:', error);
     return res.status(500).json({
       message: 'Error al obtener tareas'
+    });
+  }
+}
+
+// ========== NUEVO CONTROLADOR ==========
+// PUT /api/tareas/:id - Actualizar todos los campos de una tarea
+async function actualizarTarea(req, res) {
+  const { id } = req.params;
+  const { tar_nombre, tar_descripcion, tar_fecha, use_id } = req.body;
+
+  if (!id) {
+    return res.status(400).json({
+      message: 'ID de tarea requerido'
+    });
+  }
+
+  // Validaciones básicas
+  if (!tar_nombre || !tar_descripcion || !tar_fecha || !use_id) {
+    return res.status(400).json({
+      message: 'Todos los campos son requeridos'
+    });
+  }
+
+  try {
+    const [result] = await pool.query(
+      `UPDATE tareas 
+       SET tar_nombre = ?, 
+           tar_descripcion = ?, 
+           tar_fecha = ?, 
+           use_id = ?
+       WHERE tar_id = ?`,
+      [tar_nombre, tar_descripcion, tar_fecha, use_id, id]
+    );
+
+    if (result.affectedRows === 0) {
+      return res.status(404).json({
+        message: 'Tarea no encontrada'
+      });
+    }
+
+    return res.json({
+      message: 'Tarea actualizada correctamente'
+    });
+
+  } catch (error) {
+    console.error('Error al actualizar tarea:', error);
+    return res.status(500).json({
+      message: 'Error al actualizar tarea'
+    });
+  }
+}
+// DELETE /api/tareas/:id - Eliminar una tarea
+async function eliminarTarea(req, res) {
+  const { id } = req.params;
+
+  if (!id) {
+    return res.status(400).json({
+      message: 'ID de tarea requerido'
+    });
+  }
+
+  try {
+    // Primero verificamos si la tarea existe
+    const [tarea] = await pool.query(
+      'SELECT tar_id FROM tareas WHERE tar_id = ?',
+      [id]
+    );
+
+    if (tarea.length === 0) {
+      return res.status(404).json({
+        message: 'Tarea no encontrada'
+      });
+    }
+
+    // Eliminar la tarea
+    const [result] = await pool.query(
+      'DELETE FROM tareas WHERE tar_id = ?',
+      [id]
+    );
+
+    if (result.affectedRows === 0) {
+      return res.status(404).json({
+        message: 'Tarea no encontrada'
+      });
+    }
+
+    return res.json({
+      message: 'Tarea eliminada correctamente'
+    });
+
+  } catch (error) {
+    console.error('Error al eliminar tarea:', error);
+    return res.status(500).json({
+      message: 'Error al eliminar la tarea'
     });
   }
 }
@@ -138,5 +230,7 @@ async function actualizarEstadoTarea(req, res) {
 export {
   crearTareas,
   getTareasByReunion,
+  actualizarTarea,
+  eliminarTarea,
   actualizarEstadoTarea
 };

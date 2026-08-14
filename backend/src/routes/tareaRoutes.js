@@ -1,15 +1,23 @@
 import express from 'express';
 import {crearTareas,
         getTareasByReunion,
+        actualizarTarea,
+        eliminarTarea,
         actualizarEstadoTarea} from '../controllers/tareaController.js';
 import verifyToken from '../middlewares/auth.js';
 import checkRole from '../middlewares/role.js';
 
 const router = express.Router();
 
-// El usuario ve y actualiza solo sus propias tareas
-router.get('/', verifyToken, checkRole('Admin', 'Secretaria' ), crearTareas);
-router.get('/reunion/:id', getTareasByReunion);
-router.patch('/:id/estado', verifyToken, checkRole('Secretaria'), actualizarEstadoTarea);
+// crear tareas para una reunion
+router.post('/', verifyToken, checkRole('Admin', 'Secretaria' ), crearTareas);
+// Obtener tareas por reunion
+router.get('/reunion/:id', verifyToken, checkRole('Admin', 'Secretaria'), getTareasByReunion);
+// En tu archivo de rutas (ej: routes/tareas.js)
+router.put('/:id', actualizarTarea);
+// Para eliminar una tarea
+router.delete('/:id', eliminarTarea);
+// Para actualizar solo el estado de la tarea
+router.put('/:id/estado', actualizarEstadoTarea); 
 
 export default router;
