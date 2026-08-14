@@ -2,11 +2,11 @@
 import { useEffect, useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import api from '../../api/axios';
-import { 
-  FaCalendarAlt, 
-  FaClock, 
-  FaMapMarkerAlt, 
-  FaUser, 
+import {
+  FaCalendarAlt,
+  FaClock,
+  FaMapMarkerAlt,
+  FaUser,
   FaSpinner,
   FaUsers,
   FaArrowLeft,
@@ -17,7 +17,12 @@ import {
   FaUserCheck,
   FaEnvelope,
   FaPhone,
-  FaClipboardList
+  FaClipboardList,
+  FaTasks,
+  FaPlus,
+  FaSave,
+  FaCheckCircle,
+  FaPencilAlt
 } from 'react-icons/fa';
 
 export default function ReunionDetalle() {
@@ -26,41 +31,219 @@ export default function ReunionDetalle() {
   const [reunion, setReunion] = useState(null);
   const [invitados, setInvitados] = useState([]);
   const [cargando, setCargando] = useState(true);
+  const [guardando, setGuardando] = useState(false);
   const [error, setError] = useState('');
+  const [exito, setExito] = useState(false);
   const [actualizando, setActualizando] = useState(false);
+
+  // Estado para las tareas
+  const [tareas, setTareas] = useState([]);
+  const [tareasGuardadas, setTareasGuardadas] = useState([]);
+  const [editandoTarea, setEditandoTarea] = useState(null);
+  const [mostrarFormulario, setMostrarFormulario] = useState(false);
 
   useEffect(() => {
     if (id) {
-      cargarDetalles(id);
+      cargarDatos(id);
+      cargarTareasGuardadas(id);
     }
   }, [id]);
 
-  async function cargarDetalles(reunionId) {
+  async function cargarDatos(reunionId) {
     setCargando(true);
     setError('');
     try {
-      console.log('📋 Cargando detalles de la reunión ID:', reunionId);
+      const reunionRes = await api.get(`/reuniones/${reunionId}`);
+      console.log('📋 Reunión:', reunionRes.data);
       
-      const response = await api.get(`/reuniones/${reunionId}`);
-      console.log('✅ Datos recibidos:', response.data);
-
-      if (response.data.reunion && response.data.invitados) {
-        setReunion(response.data.reunion);
-        setInvitados(response.data.invitados);
+      if (reunionRes.data.reunion) {
+        setReunion(reunionRes.data.reunion);
+        setInvitados(reunionRes.data.invitados || []);
       } else {
-        setReunion(response.data);
+        setReunion(reunionRes.data);
         const invitadosRes = await api.get(`/reuniones/${reunionId}/invitados`);
         setInvitados(invitadosRes.data);
       }
-
     } catch (err) {
       console.error('❌ Error:', err);
-      setError(err.response?.data?.message || 'Error al cargar los detalles');
+      setError(err.response?.data?.message || 'Error al cargar los datos');
     } finally {
       setCargando(false);
     }
   }
 
+  async function cargarTareasGuardadas(reunionId) {
+    try {
+      const response = await api.get(`/tareas/reunion/${reunionId}`);
+      console.log('📋 Tareas guardadas:', response.data);
+      setTareasGuardadas(response.data || []);
+    } catch (err) {
+      console.error('❌ Error al cargar tareas:', err);
+      setTareasGuardadas([]);
+    }
+  }
+
+  // ========== FUNCIONES PARA TAREAS ==========
+  const agregarTarea = () => {
+    setTareas([
+      ...tareas,
+      { 
+        tar_nombre: '', 
+        tar_descripcion: '', 
+        tar_fecha: '', 
+        use_id: '',
+        es_nueva: true,
+        tar_id: null
+      }
+    ]);
+    setMostrarFormulario(true);
+  };
+
+  const eliminarTarea = (index) => {
+    if (tareas.length === 1) {
+      setError('Debe haber al menos una tarea');
+      return;
+    }
+    const nuevasTareas = tareas.filter((_, i) => i !== index);
+    setTareas(nuevasTareas);
+  };
+
+  const actualizarTarea = (index, campo, valor) => {
+    const nuevasTareas = [...tareas];
+    nuevasTareas[index][campo] = valor;
+    setTareas(nuevasTareas);
+  };
+
+  const guardarTareas = async (e) => {
+    e.preventDefault();
+    setGuardando(true);
+    setError('');
+    setExito(false);
+
+    const tareasIncompletas = tareas.some(t => 
+      !t.tar_nombre.trim() || !t.tar_descripcion.trim() || !t.tar_fecha || !t.use_id
+    );
+
+    if (tareasIncompletas) {
+      setError('Todos los campos son obligatorios para cada tarea');
+      setGuardando(false);
+      return;
+    }
+
+    try {
+      const tareasData = tareas.map(t => ({
+        tar_nombre: t.tar_nombre,
+        tar_descripcion: t.tar_descripcion,
+        tar_fecha: t.tar_fecha,
+        use_id: t.use_id,
+        reu_id: parseInt(id)
+      }));
+
+      const response = await api.post('/tareas', { tareas: tareasData });
+      console.log('✅ Tareas guardadas:', response.data);
+      
+      await cargarTareasGuardadas(id);
+      
+      setExito(true);
+      setError('');
+      
+      setTareas([]);
+      setMostrarFormulario(false);
+      
+      setTimeout(() => {
+        setExito(false);
+      }, 3000);
+
+    } catch (err) {
+      console.error('❌ Error al guardar tareas:', err);
+      setError(err.response?.data?.message || 'Error al guardar las tareas');
+    } finally {
+      setGuardando(false);
+    }
+  };
+
+  const editarTareaGuardada = (tarea) => {
+    setTareas([{
+      tar_id: tarea.tar_id,
+      tar_nombre: tarea.tar_nombre,
+      tar_descripcion: tarea.tar_descripcion,
+      tar_fecha: tarea.tar_fecha,
+      use_id: tarea.use_id,
+      es_nueva: false
+    }]);
+    setEditandoTarea(tarea.tar_id);
+    setMostrarFormulario(true);
+    
+    document.getElementById('formulario-tareas')?.scrollIntoView({ behavior: 'smooth' });
+  };
+
+  const actualizarTareaGuardada = async (e) => {
+    e.preventDefault();
+    setGuardando(true);
+    setError('');
+    setExito(false);
+
+    const tarea = tareas[0];
+    if (!tarea.tar_nombre.trim() || !tarea.tar_descripcion.trim() || !tarea.tar_fecha || !tarea.use_id) {
+      setError('Todos los campos son obligatorios');
+      setGuardando(false);
+      return;
+    }
+
+    try {
+      await api.put(`/tareas/${tarea.tar_id}`, {
+        tar_nombre: tarea.tar_nombre,
+        tar_descripcion: tarea.tar_descripcion,
+        tar_fecha: tarea.tar_fecha,
+        use_id: tarea.use_id
+      });
+      
+      await cargarTareasGuardadas(id);
+      
+      setExito(true);
+      setError('');
+      
+      setTareas([]);
+      setEditandoTarea(null);
+      setMostrarFormulario(false);
+      
+      setTimeout(() => {
+        setExito(false);
+      }, 3000);
+
+    } catch (err) {
+      console.error('❌ Error al actualizar tarea:', err);
+      setError(err.response?.data?.message || 'Error al actualizar la tarea');
+    } finally {
+      setGuardando(false);
+    }
+  };
+
+  const eliminarTareaGuardada = async (tarId) => {
+    if (!confirm('¿Estás seguro de eliminar esta tarea?')) return;
+    
+    setGuardando(true);
+    try {
+      await api.delete(`/tareas/${tarId}`);
+      await cargarTareasGuardadas(id);
+      setExito(true);
+      setTimeout(() => setExito(false), 3000);
+    } catch (err) {
+      console.error('❌ Error al eliminar tarea:', err);
+      setError('Error al eliminar la tarea');
+    } finally {
+      setGuardando(false);
+    }
+  };
+
+  const cancelarEdicion = () => {
+    setTareas([]);
+    setEditandoTarea(null);
+    setMostrarFormulario(false);
+    setError('');
+  };
+
+  // ========== FUNCIONES PARA ASISTENCIA ==========
   const actualizarEstadoAsistencia = async (asiId, nuevoEstado) => {
     setActualizando(true);
     try {
@@ -75,13 +258,24 @@ export default function ReunionDetalle() {
     }
   };
 
+  // ========== UTILIDADES ==========
   const formatearFecha = (fecha) => {
     if (!fecha) return 'Sin fecha';
-    const opciones = { 
-      weekday: 'long', 
-      year: 'numeric', 
-      month: 'long', 
-      day: 'numeric' 
+    const opciones = {
+      weekday: 'long',
+      year: 'numeric',
+      month: 'long',
+      day: 'numeric'
+    };
+    return new Date(fecha).toLocaleDateString('es-ES', opciones);
+  };
+
+  const formatearFechaCorta = (fecha) => {
+    if (!fecha) return 'Sin fecha';
+    const opciones = {
+      year: 'numeric',
+      month: 'short',
+      day: 'numeric'
     };
     return new Date(fecha).toLocaleDateString('es-ES', opciones);
   };
@@ -93,41 +287,51 @@ export default function ReunionDetalle() {
   const getEstadoBadge = (estatus) => {
     const estado = estatus?.toLowerCase() || 'ausente';
     const configs = {
-      'presente': { 
-        color: '#10B981', 
-        bg: '#D1FAE5', 
-        icon: FaCheck, 
-        text: 'Presente' 
+      'presente': {
+        color: 'text-green-700',
+        bg: 'bg-green-100',
+        icon: FaCheck,
+        text: 'Presente'
       },
-      'ausente': { 
-        color: '#EF4444', 
-        bg: '#FEE2E2', 
-        icon: FaTimes, 
-        text: 'Ausente' 
+      'ausente': {
+        color: 'text-red-700',
+        bg: 'bg-red-100',
+        icon: FaTimes,
+        text: 'Ausente'
       },
-      'justificado': { 
-        color: '#F59E0B', 
-        bg: '#FEF3C7', 
-        icon: FaUserCheck, 
-        text: 'Justificado' 
+      'justificado': {
+        color: 'text-yellow-700',
+        bg: 'bg-yellow-100',
+        icon: FaUserCheck,
+        text: 'Justificado'
       }
     };
     const config = configs[estado] || configs['ausente'];
     const Icon = config.icon;
     return (
-      <span style={{
-        display: 'inline-flex',
-        alignItems: 'center',
-        gap: '0.25rem',
-        backgroundColor: config.bg,
-        color: config.color,
-        padding: '0.2rem 0.75rem',
-        borderRadius: '9999px',
-        fontSize: '0.75rem',
-        fontWeight: 500
-      }}>
+      <span className={`inline-flex items-center gap-1 px-3 py-0.5 rounded-full text-xs font-medium ${config.bg} ${config.color}`}>
         <Icon size={12} />
         {config.text}
+      </span>
+    );
+  };
+
+  // ✅ CORREGIDO: Mostrar los estados exactos de la base de datos
+  const getEstadoTareaBadge = (status) => {
+    // Mapeo de colores para cada estado
+    const configs = {
+      'Iniciar': { color: 'text-blue-700', bg: 'bg-blue-100' },
+      'Proceso': { color: 'text-yellow-700', bg: 'bg-yellow-100' },
+      'Revision': { color: 'text-purple-700', bg: 'bg-purple-100' },
+      'Finalizado': { color: 'text-green-700', bg: 'bg-green-100' }
+    };
+    
+    // Si el estado no está en el mapeo, usar un color por defecto
+    const config = configs[status] || { color: 'text-gray-700', bg: 'bg-gray-100' };
+    
+    return (
+      <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${config.bg} ${config.color}`}>
+        {status || 'Sin estado'}
       </span>
     );
   };
@@ -138,32 +342,22 @@ export default function ReunionDetalle() {
 
   if (cargando) {
     return (
-      <div className="page" style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', minHeight: '60vh', flexDirection: 'column', gap: '1rem' }}>
-        <FaSpinner style={{ fontSize: '2rem', color: '#2563EB', animation: 'spin 1s linear infinite' }} />
-        <p style={{ color: '#6B7280' }}>Cargando detalles...</p>
+      <div className="flex justify-center items-center min-h-[60vh] flex-col gap-4">
+        <FaSpinner className="text-4xl text-blue-600 animate-spin" />
+        <p className="text-gray-500">Cargando detalles...</p>
       </div>
     );
   }
 
-  if (error) {
+  if (error && !reunion) {
     return (
-      <div className="page" style={{ maxWidth: '900px', margin: '0 auto' }}>
-        <div className="error-text" style={{ backgroundColor: '#FEE2E2', padding: '1rem', borderRadius: '8px', marginBottom: '1rem' }}>
+      <div className="max-w-4xl mx-auto p-4">
+        <div className="bg-red-100 text-red-700 p-4 rounded-lg mb-4">
           {error}
         </div>
         <button
           onClick={volver}
-          style={{
-            backgroundColor: '#2563EB',
-            color: 'white',
-            border: 'none',
-            padding: '0.6rem 1.2rem',
-            borderRadius: '6px',
-            cursor: 'pointer',
-            display: 'flex',
-            alignItems: 'center',
-            gap: '0.5rem'
-          }}
+          className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-md flex items-center gap-2 transition-colors"
         >
           <FaArrowLeft /> Volver
         </button>
@@ -173,23 +367,11 @@ export default function ReunionDetalle() {
 
   if (!reunion) {
     return (
-      <div className="page" style={{ textAlign: 'center', maxWidth: '900px', margin: '0 auto' }}>
-        <h2 style={{ fontSize: '1.5rem', color: '#1F2937' }}>Reunión no encontrada</h2>
+      <div className="text-center max-w-4xl mx-auto p-4">
+        <h2 className="text-2xl text-gray-800">Reunión no encontrada</h2>
         <button
           onClick={volver}
-          style={{
-            backgroundColor: '#2563EB',
-            color: 'white',
-            border: 'none',
-            padding: '0.6rem 1.2rem',
-            borderRadius: '6px',
-            cursor: 'pointer',
-            marginTop: '1rem',
-            display: 'flex',
-            alignItems: 'center',
-            gap: '0.5rem',
-            margin: '1rem auto 0'
-          }}
+          className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-md flex items-center gap-2 mx-auto mt-4 transition-colors"
         >
           <FaArrowLeft /> Volver
         </button>
@@ -198,140 +380,70 @@ export default function ReunionDetalle() {
   }
 
   return (
-    <div className="page" style={{ maxWidth: '1000px', margin: '0 auto' }}>
+    <div className="max-w-4xl mx-auto p-4">
       {/* Botón volver */}
       <button
         onClick={volver}
-        style={{
-          display: 'flex',
-          alignItems: 'center',
-          gap: '0.5rem',
-          background: 'none',
-          border: 'none',
-          color: '#6B7280',
-          cursor: 'pointer',
-          fontSize: '0.9rem',
-          marginBottom: '1.5rem',
-          transition: 'all 0.2s'
-        }}
-        onMouseEnter={(e) => {
-          e.currentTarget.style.color = '#2563EB';
-          e.currentTarget.querySelector('svg').style.transform = 'translateX(-4px)';
-        }}
-        onMouseLeave={(e) => {
-          e.currentTarget.style.color = '#6B7280';
-          e.currentTarget.querySelector('svg').style.transform = 'translateX(0)';
-        }}
+        className="flex items-center gap-2 text-gray-500 hover:text-blue-600 cursor-pointer text-sm mb-6 transition-all group"
       >
-        <FaArrowLeft style={{ transition: 'transform 0.2s' }} />
+        <FaArrowLeft className="transition-transform group-hover:-translate-x-1" />
         <span>Volver a Agenda</span>
       </button>
 
       {/* Tarjeta principal */}
-      <div style={{
-        backgroundColor: 'white',
-        borderRadius: '8px',
-        padding: '1.5rem 2rem',
-        boxShadow: '0 1px 4px rgba(0,0,0,0.06)',
-        marginBottom: '1.5rem'
-      }}>
-        <div style={{
-          display: 'flex',
-          flexWrap: 'wrap',
-          justifyContent: 'space-between',
-          alignItems: 'flex-start',
-          gap: '1rem',
-          marginBottom: '1.5rem'
-        }}>
+      <div className="bg-white rounded-lg p-6 shadow-sm mb-6">
+        <div className="flex flex-wrap justify-between items-start gap-4 mb-6">
           <div>
-            <h2 style={{ margin: 0, fontSize: '1.5rem' }}>
+            <h2 className="text-2xl font-semibold m-0">
               {reunion.nombre || reunion.reu_nombre}
             </h2>
-            <p style={{ color: '#6B7280', fontSize: '0.85rem', margin: '0.25rem 0 0 0' }}>
+            <p className="text-gray-500 text-sm m-0 mt-1">
               ID: {reunion.id || reunion.reu_id}
             </p>
           </div>
-          <div style={{ display: 'flex', gap: '0.5rem' }}>
-            <button style={{
-              backgroundColor: '#2563EB',
-              color: 'white',
-              border: 'none',
-              padding: '0.4rem 1rem',
-              borderRadius: '6px',
-              cursor: 'pointer',
-              fontSize: '0.85rem',
-              display: 'flex',
-              alignItems: 'center',
-              gap: '0.4rem'
-            }}>
+          <div className="flex gap-2">
+            <button className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-1.5 rounded-md text-sm flex items-center gap-1.5 transition-colors">
               <FaEdit size={14} /> Editar
             </button>
-            <button 
-  onClick={() => navigate(`/asistente/minutas/${reunion.reu_id || reunion.id}`)}
-  style={{
-    backgroundColor: '#10B981',
-    color: 'white',
-    border: 'none',
-    padding: '0.4rem 1rem',
-    borderRadius: '6px',
-    cursor: 'pointer',
-    fontSize: '0.85rem',
-    display: 'flex',
-    alignItems: 'center',
-    gap: '0.4rem'
-  }}
-  onMouseEnter={(e) => e.currentTarget.style.backgroundColor = '#059669'}
-  onMouseLeave={(e) => e.currentTarget.style.backgroundColor = '#10B981'}
->
-  <FaEdit size={14} /> Minuta
-</button>
-            </div>
+          </div>
         </div>
 
-        <div style={{
-          display: 'grid',
-          gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))',
-          gap: '1rem',
-          backgroundColor: '#F9FAFB',
-          padding: '1rem 1.5rem',
-          borderRadius: '8px',
-          marginBottom: '1.5rem'
-        }}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
-            <FaCalendarAlt style={{ color: '#2563EB', fontSize: '1.25rem' }} />
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 bg-gray-50 p-4 rounded-lg mb-6">
+          <div className="flex items-center gap-3">
+            <FaCalendarAlt className="text-blue-600 text-xl" />
             <div>
-              <div style={{ fontSize: '0.75rem', color: '#6B7280' }}>Fecha</div>
-              <div style={{ fontWeight: 500, color: '#1F2937' }}>
+              <div className="text-xs text-gray-500">Fecha</div>
+              <div className="font-medium text-gray-800">
                 {formatearFecha(reunion.fecha || reunion.reu_fecha)}
               </div>
             </div>
           </div>
 
-          <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
-            <FaClock style={{ color: '#2563EB', fontSize: '1.25rem' }} />
+          <div className="flex items-center gap-3">
+            <FaClock className="text-blue-600 text-xl" />
             <div>
-              <div style={{ fontSize: '0.75rem', color: '#6B7280' }}>Hora</div>
-              <div style={{ fontWeight: 500, color: '#1F2937' }}>
+              <div className="text-xs text-gray-500">Hora</div>
+              <div className="font-medium text-gray-800">
                 {reunion.hora || reunion.reu_hora}
               </div>
             </div>
           </div>
 
-          <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
-            <FaMapMarkerAlt style={{ color: '#2563EB', fontSize: '1.25rem' }} />
+          <div className="flex items-center gap-3">
+            <FaMapMarkerAlt className="text-blue-600 text-xl" />
             <div>
-              <div style={{ fontSize: '0.75rem', color: '#6B7280' }}>Lugar</div>
-              <div style={{ fontWeight: 500, color: '#1F2937' }}>
+              <div className="text-xs text-gray-500">Lugar</div>
+              <div className="font-medium text-gray-800">
                 {reunion.lugar || reunion.reu_lugar || 'Sin lugar definido'}
               </div>
             </div>
           </div>
 
-          <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
-            <FaUser style={{ color: '#2563EB', fontSize: '1.25rem' }} />
+          <div className="flex items-center gap-3">
+            <FaUser className="text-blue-600 text-xl" />
             <div>
-              <div style={{ fontSize: '0.75rem', color: '#6B7280' }}>Creador</div>
-              <div style={{ fontWeight: 500, color: '#1F2937' }}>
+              <div className="text-xs text-gray-500">Creador</div>
+              <div className="font-medium text-gray-800">
                 {reunion.creador?.nombre || reunion.creado_por_nombre || 'Sin creador'}
               </div>
             </div>
@@ -340,230 +452,378 @@ export default function ReunionDetalle() {
 
         {(reunion.descripcion || reunion.reu_descripcion) && (
           <div>
-            <h3 style={{ fontSize: '0.9rem', fontWeight: 600, color: '#1F2937', marginBottom: '0.5rem', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-              <FaClipboardList style={{ color: '#2563EB' }} />
+            <h3 className="text-sm font-semibold text-gray-800 mb-2 flex items-center gap-2">
+              <FaClipboardList className="text-blue-600" />
               Descripción
             </h3>
-            <p style={{ color: '#4B5563', lineHeight: 1.6, backgroundColor: '#F9FAFB', padding: '1rem', borderRadius: '8px', margin: 0 }}>
+            <p className="text-gray-600 leading-relaxed bg-gray-50 p-4 rounded-lg m-0">
               {reunion.descripcion || reunion.reu_descripcion}
             </p>
           </div>
         )}
       </div>
 
+      {/* ✅ SECCIÓN DE TAREAS GUARDADAS */}
+      {tareasGuardadas.length > 0 && (
+        <div className="bg-white rounded-lg p-6 shadow-sm mb-6">
+          <div className="flex items-center gap-2 mb-4">
+            <FaTasks className="text-green-600 text-xl" />
+            <h3 className="text-lg font-semibold text-gray-800 m-0">
+              Tareas Asignadas
+            </h3>
+            <span className="text-sm text-gray-500 ml-2">
+              ({tareasGuardadas.length} tarea{tareasGuardadas.length !== 1 ? 's' : ''})
+            </span>
+          </div>
+
+          <div className="space-y-3">
+            {tareasGuardadas.map((tarea) => (
+              <div
+                key={tarea.tar_id}
+                className="bg-gray-50 rounded-lg p-4 border border-gray-200 hover:shadow-md transition-shadow"
+              >
+                <div className="flex flex-col sm:flex-row justify-between items-start gap-3">
+                  <div className="flex-1">
+                    <div className="flex items-center gap-2 flex-wrap">
+                      <h4 className="font-semibold text-gray-800">
+                        {tarea.tar_nombre}
+                      </h4>
+                      {/* ✅ Mostrar el estado exacto de la base de datos */}
+                      {getEstadoTareaBadge(tarea.tar_estatus)}
+                    </div>
+                    <p className="text-sm text-gray-600 mt-1">
+                      {tarea.tar_descripcion}
+                    </p>
+                    <div className="flex flex-wrap gap-3 mt-2 text-xs text-gray-500">
+                      <span className="flex items-center gap-1">
+                        <FaCalendarAlt size={10} /> 
+                        {formatearFechaCorta(tarea.tar_fecha)}
+                      </span>
+                      <span className="flex items-center gap-1">
+                        <FaUser size={10} /> 
+                        {tarea.usuario_nombre} {tarea.usuario_apellido}
+                      </span>
+                    </div>
+                  </div>
+                  <div className="flex gap-2 flex-shrink-0">
+                    {/* ✅ Solo botones de Editar y Eliminar */}
+                    <button
+                      onClick={() => editarTareaGuardada(tarea)}
+                      className="px-3 py-1.5 bg-blue-100 text-blue-700 hover:bg-blue-200 rounded-md text-xs font-medium flex items-center gap-1 transition-colors"
+                    >
+                      <FaPencilAlt size={10} /> Editar
+                    </button>
+                    <button
+                      onClick={() => eliminarTareaGuardada(tarea.tar_id)}
+                      className="px-3 py-1.5 bg-red-100 text-red-700 hover:bg-red-200 rounded-md text-xs font-medium flex items-center gap-1 transition-colors"
+                    >
+                      <FaTrash size={10} /> Eliminar
+                    </button>
+                  </div>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
+
+      {/* ✅ FORMULARIO DE TAREAS */}
+      {(mostrarFormulario || tareas.length > 0) && (
+        <div id="formulario-tareas" className="bg-white rounded-lg p-6 shadow-sm mb-6">
+          <div className="flex items-center justify-between mb-4">
+            <div className="flex items-center gap-2">
+              <FaTasks className="text-blue-600 text-xl" />
+              <h3 className="text-lg font-semibold text-gray-800 m-0">
+                {editandoTarea ? 'Editar Tarea' : 'Asignar Tareas'}
+              </h3>
+              {editandoTarea && (
+                <span className="text-xs bg-yellow-100 text-yellow-700 px-2 py-0.5 rounded-full">
+                  Editando
+                </span>
+              )}
+            </div>
+            {!editandoTarea && tareasGuardadas.length > 0 && (
+              <button
+                type="button"
+                onClick={cancelarEdicion}
+                className="text-gray-500 hover:text-gray-700 text-sm"
+              >
+                Cancelar
+              </button>
+            )}
+          </div>
+
+          <form onSubmit={editandoTarea ? actualizarTareaGuardada : guardarTareas} className="space-y-4">
+            {tareas.map((tarea, index) => (
+              <div
+                key={index}
+                className="bg-gray-50 rounded-lg p-5 border border-gray-200 relative transition-all hover:shadow-md"
+              >
+                {!editandoTarea && tareas.length > 1 && (
+                  <button
+                    type="button"
+                    onClick={() => eliminarTarea(index)}
+                    className="absolute top-3 right-3 bg-red-50 text-red-600 hover:bg-red-100 rounded-lg px-2.5 py-1.5 text-xs font-medium flex items-center gap-1 transition-colors"
+                  >
+                    <FaTrash size={12} /> Eliminar
+                  </button>
+                )}
+
+                <h4 className="text-sm font-semibold text-gray-700 mb-4 flex items-center gap-2">
+                  <span className="w-6 h-6 bg-blue-100 text-blue-600 rounded-full flex items-center justify-center text-xs font-bold">
+                    {editandoTarea ? '✏️' : (index + 1)}
+                  </span>
+                  {editandoTarea ? 'Editando tarea' : `Tarea #${index + 1}`}
+                </h4>
+
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div className="md:col-span-2">
+                    <label className="block text-sm font-medium text-gray-700 mb-1.5">
+                      <FaClipboardList className="inline mr-1.5 text-blue-500" />
+                      Nombre de la tarea *
+                    </label>
+                    <input
+                      type="text"
+                      placeholder="Ej: Revisar documentación"
+                      value={tarea.tar_nombre}
+                      onChange={(e) => actualizarTarea(index, 'tar_nombre', e.target.value)}
+                      required
+                      className="w-full px-3.5 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition-shadow text-gray-700 bg-white"
+                    />
+                  </div>
+
+                  <div className="md:col-span-2">
+                    <label className="block text-sm font-medium text-gray-700 mb-1.5">
+                      Descripción *
+                    </label>
+                    <textarea
+                      placeholder="Detalles de la tarea..."
+                      value={tarea.tar_descripcion}
+                      onChange={(e) => actualizarTarea(index, 'tar_descripcion', e.target.value)}
+                      required
+                      rows="2"
+                      className="w-full px-3.5 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition-shadow resize-y text-gray-700 bg-white"
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1.5">
+                      <FaCalendarAlt className="inline mr-1.5 text-blue-500" />
+                      Fecha de entrega *
+                    </label>
+                    <input
+                      type="date"
+                      value={tarea.tar_fecha}
+                      onChange={(e) => actualizarTarea(index, 'tar_fecha', e.target.value)}
+                      required
+                      className="w-full px-3.5 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition-shadow text-gray-700 bg-white"
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1.5">
+                      <FaUser className="inline mr-1.5 text-blue-500" />
+                      Asignar a *
+                    </label>
+                    <select
+                      value={tarea.use_id}
+                      onChange={(e) => actualizarTarea(index, 'use_id', e.target.value)}
+                      required
+                      className="w-full px-3.5 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition-shadow bg-white text-gray-700"
+                    >
+                      <option value="">Seleccionar usuario</option>
+                      {invitados.map((invitado) => {
+                        const usuario = invitado.usuario || invitado;
+                        return (
+                          <option key={usuario.id || usuario.use_id} value={usuario.id || usuario.use_id}>
+                            {usuario.nombre} {usuario.apellido}
+                          </option>
+                        );
+                      })}
+                    </select>
+                  </div>
+                </div>
+              </div>
+            ))}
+
+            {!editandoTarea && (
+              <button
+                type="button"
+                onClick={agregarTarea}
+                className="w-full py-3 border-2 border-dashed border-gray-300 rounded-xl text-gray-600 hover:border-blue-400 hover:text-blue-600 hover:bg-blue-50 transition-all flex items-center justify-center gap-2 font-medium"
+              >
+                <FaPlus /> Agregar otra tarea
+              </button>
+            )}
+
+            {error && (
+              <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-lg flex items-center gap-2">
+                <FaTimes className="text-red-500 flex-shrink-0" />
+                <span>{error}</span>
+              </div>
+            )}
+
+            {exito && (
+              <div className="bg-green-50 border border-green-200 text-green-700 px-4 py-3 rounded-lg flex items-center gap-2">
+                <FaCheckCircle className="text-green-500 flex-shrink-0" />
+                <span>{editandoTarea ? 'Tarea actualizada correctamente' : 'Tareas guardadas correctamente'}</span>
+              </div>
+            )}
+
+            <div className="flex flex-col sm:flex-row gap-3 pt-2">
+              {editandoTarea ? (
+                <>
+                  <button
+                    type="button"
+                    onClick={cancelarEdicion}
+                    className="px-6 py-2.5 bg-white text-gray-700 border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors font-medium"
+                  >
+                    Cancelar
+                  </button>
+                  <button
+                    type="submit"
+                    disabled={guardando}
+                    className="flex-1 px-8 py-2.5 bg-yellow-600 hover:bg-yellow-700 text-white rounded-lg font-medium transition-colors flex items-center justify-center gap-2 disabled:opacity-60 disabled:cursor-not-allowed"
+                  >
+                    {guardando ? (
+                      <>
+                        <FaSpinner className="animate-spin" />
+                        Actualizando...
+                      </>
+                    ) : (
+                      <>
+                        <FaSave /> Actualizar Tarea
+                      </>
+                    )}
+                  </button>
+                </>
+              ) : (
+                <>
+                  <button
+                    type="button"
+                    onClick={cancelarEdicion}
+                    className="px-6 py-2.5 bg-white text-gray-700 border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors font-medium"
+                  >
+                    Cancelar
+                  </button>
+                  <button
+                    type="submit"
+                    disabled={guardando || tareas.length === 0}
+                    className="flex-1 px-8 py-2.5 bg-blue-600 hover:bg-blue-700 text-white rounded-lg font-medium transition-colors flex items-center justify-center gap-2 disabled:opacity-60 disabled:cursor-not-allowed"
+                  >
+                    {guardando ? (
+                      <>
+                        <FaSpinner className="animate-spin" />
+                        Guardando...
+                      </>
+                    ) : (
+                      <>
+                        <FaSave /> Guardar Tareas ({tareas.length})
+                      </>
+                    )}
+                  </button>
+                </>
+              )}
+            </div>
+          </form>
+        </div>
+      )}
+
+      {/* Botón para agregar nueva tarea cuando ya hay tareas guardadas */}
+      {tareasGuardadas.length > 0 && !mostrarFormulario && tareas.length === 0 && (
+        <button
+          onClick={agregarTarea}
+          className="w-full mb-6 py-3 border-2 border-dashed border-blue-300 rounded-xl text-blue-600 hover:border-blue-400 hover:bg-blue-50 transition-all flex items-center justify-center gap-2 font-medium"
+        >
+          <FaPlus /> Agregar nueva tarea
+        </button>
+      )}
+
       {/* Lista de invitados */}
-      <div style={{
-        backgroundColor: 'white',
-        borderRadius: '8px',
-        padding: '1.5rem 2rem',
-        boxShadow: '0 1px 4px rgba(0,0,0,0.06)'
-      }}>
-        <div style={{
-          display: 'flex',
-          justifyContent: 'space-between',
-          alignItems: 'center',
-          marginBottom: '1.5rem'
-        }}>
-          <h3 style={{ fontSize: '1.1rem', fontWeight: 600, color: '#1F2937', margin: 0, display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-            <FaUsers style={{ color: '#2563EB' }} />
+      <div className="bg-white rounded-lg p-6 shadow-sm">
+        <div className="flex justify-between items-center mb-4">
+          <h3 className="text-lg font-semibold text-gray-800 m-0 flex items-center gap-2">
+            <FaUsers className="text-blue-600" />
             Invitados ({invitados.length})
           </h3>
         </div>
 
         {invitados.length === 0 ? (
-          <div style={{ textAlign: 'center', padding: '2rem', color: '#9CA3AF' }}>
-            <FaUsers style={{ fontSize: '2rem', marginBottom: '0.5rem', opacity: 0.4 }} />
+          <div className="text-center py-8 text-gray-400">
+            <FaUsers className="text-4xl mx-auto mb-2 opacity-40" />
             <p>No hay invitados para esta reunión</p>
           </div>
         ) : (
           <>
-            <div style={{
-              display: 'grid',
-              gridTemplateColumns: 'repeat(auto-fill, minmax(300px, 1fr))',
-              gap: '0.75rem'
-            }}>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
               {invitados.map((invitado) => {
                 const usuario = invitado.usuario || invitado;
                 const estatus = invitado.estatus || invitado.asi_estatus || 'ausente';
                 const asiId = invitado.asi_id || invitado.id;
-                
+
                 return (
                   <div
                     key={asiId}
-                    style={{
-                      backgroundColor: '#F9FAFB',
-                      borderRadius: '8px',
-                      padding: '1rem',
-                      transition: 'all 0.2s',
-                      border: '1px solid #F3F4F6'
-                    }}
-                    onMouseEnter={(e) => {
-                      e.currentTarget.style.backgroundColor = '#F3F4F6';
-                      e.currentTarget.style.transform = 'scale(1.02)';
-                    }}
-                    onMouseLeave={(e) => {
-                      e.currentTarget.style.backgroundColor = '#F9FAFB';
-                      e.currentTarget.style.transform = 'scale(1)';
-                    }}
+                    className="bg-gray-50 rounded-lg p-4 border border-gray-100 hover:bg-gray-100 hover:scale-[1.02] transition-all"
                   >
-                    <div style={{ display: 'flex', alignItems: 'flex-start', gap: '0.75rem' }}>
-                      <div style={{
-                        width: '40px',
-                        height: '40px',
-                        borderRadius: '50%',
-                        backgroundColor: '#2563EB',
-                        color: 'white',
-                        display: 'flex',
-                        alignItems: 'center',
-                        justifyContent: 'center',
-                        fontWeight: 600,
-                        fontSize: '0.9rem',
-                        flexShrink: 0
-                      }}>
+                    <div className="flex items-start gap-3">
+                      <div className="w-10 h-10 rounded-full bg-blue-600 text-white flex items-center justify-center font-semibold text-sm flex-shrink-0">
                         {getIniciales(usuario.nombre, usuario.apellido)}
                       </div>
 
-                      <div style={{ flex: 1, minWidth: 0 }}>
-                        <div style={{ fontWeight: 600, color: '#1F2937', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                      <div className="flex-1 min-w-0">
+                        <div className="font-semibold text-gray-800 truncate">
                           {usuario.nombre} {usuario.apellido}
                         </div>
-                        
-                        <div style={{ display: 'flex', alignItems: 'center', gap: '0.25rem', fontSize: '0.75rem', color: '#6B7280', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+
+                        <div className="flex items-center gap-1 text-xs text-gray-500 truncate">
                           <FaEnvelope size={10} />
-                          <span style={{ overflow: 'hidden', textOverflow: 'ellipsis' }}>{usuario.correo}</span>
+                          <span className="truncate">{usuario.correo}</span>
                         </div>
-                        
+
                         {usuario.telefono && (
-                          <div style={{ display: 'flex', alignItems: 'center', gap: '0.25rem', fontSize: '0.75rem', color: '#6B7280' }}>
+                          <div className="flex items-center gap-1 text-xs text-gray-500">
                             <FaPhone size={10} />
                             <span>{usuario.telefono}</span>
                           </div>
                         )}
 
                         {invitado.puesto && (
-                          <div style={{ marginTop: '0.25rem' }}>
-                            <span style={{
-                              fontSize: '0.65rem',
-                              backgroundColor: '#DBEAFE',
-                              color: '#1E40AF',
-                              padding: '0.1rem 0.5rem',
-                              borderRadius: '9999px'
-                            }}>
+                          <div className="mt-1">
+                            <span className="text-xs bg-blue-100 text-blue-800 px-2 py-0.5 rounded-full">
                               {invitado.puesto}
                             </span>
                           </div>
                         )}
 
-                        <div style={{ marginTop: '0.5rem' }}>
+                        <div className="mt-2">
                           {getEstadoBadge(estatus)}
                         </div>
                       </div>
                     </div>
 
-                    {/* Botones de acción */}
-                    <div style={{
-                      marginTop: '0.75rem',
-                      paddingTop: '0.75rem',
-                      borderTop: '1px solid #E5E7EB',
-                      display: 'flex',
-                      gap: '0.5rem',
-                      flexWrap: 'wrap'
-                    }}>
+                    <div className="mt-2 pt-2 border-t border-gray-200 flex flex-wrap gap-1">
                       <button
                         onClick={() => actualizarEstadoAsistencia(asiId, 'presente')}
                         disabled={actualizando || estatus === 'presente'}
-                        style={{
-                          padding: '0.2rem 0.75rem',
-                          borderRadius: '6px',
-                          border: 'none',
-                          fontSize: '0.75rem',
-                          fontWeight: 500,
-                          cursor: estatus === 'presente' ? 'default' : 'pointer',
-                          backgroundColor: estatus === 'presente' ? '#D1FAE5' : '#E5E7EB',
-                          color: estatus === 'presente' ? '#065F46' : '#4B5563',
-                          display: 'flex',
-                          alignItems: 'center',
-                          gap: '0.25rem',
-                          transition: 'all 0.2s'
-                        }}
-                        onMouseEnter={(e) => {
-                          if (estatus !== 'presente') {
-                            e.currentTarget.style.backgroundColor = '#D1FAE5';
-                            e.currentTarget.style.color = '#065F46';
-                          }
-                        }}
-                        onMouseLeave={(e) => {
-                          if (estatus !== 'presente') {
-                            e.currentTarget.style.backgroundColor = '#E5E7EB';
-                            e.currentTarget.style.color = '#4B5563';
-                          }
-                        }}
+                        className={`px-3 py-0.5 rounded-md text-xs font-medium flex items-center gap-1 transition-colors ${
+                          estatus === 'presente'
+                            ? 'bg-green-100 text-green-700 cursor-default'
+                            : 'bg-gray-200 text-gray-600 hover:bg-green-100 hover:text-green-700'
+                        }`}
                       >
                         <FaCheck size={10} /> Presente
                       </button>
                       <button
                         onClick={() => actualizarEstadoAsistencia(asiId, 'ausente')}
                         disabled={actualizando || estatus === 'ausente'}
-                        style={{
-                          padding: '0.2rem 0.75rem',
-                          borderRadius: '6px',
-                          border: 'none',
-                          fontSize: '0.75rem',
-                          fontWeight: 500,
-                          cursor: estatus === 'ausente' ? 'default' : 'pointer',
-                          backgroundColor: estatus === 'ausente' ? '#FEE2E2' : '#E5E7EB',
-                          color: estatus === 'ausente' ? '#991B1B' : '#4B5563',
-                          display: 'flex',
-                          alignItems: 'center',
-                          gap: '0.25rem',
-                          transition: 'all 0.2s'
-                        }}
-                        onMouseEnter={(e) => {
-                          if (estatus !== 'ausente') {
-                            e.currentTarget.style.backgroundColor = '#FEE2E2';
-                            e.currentTarget.style.color = '#991B1B';
-                          }
-                        }}
-                        onMouseLeave={(e) => {
-                          if (estatus !== 'ausente') {
-                            e.currentTarget.style.backgroundColor = '#E5E7EB';
-                            e.currentTarget.style.color = '#4B5563';
-                          }
-                        }}
+                        className={`px-3 py-0.5 rounded-md text-xs font-medium flex items-center gap-1 transition-colors ${
+                          estatus === 'ausente'
+                            ? 'bg-red-100 text-red-700 cursor-default'
+                            : 'bg-gray-200 text-gray-600 hover:bg-red-100 hover:text-red-700'
+                        }`}
                       >
                         <FaTimes size={10} /> Ausente
-                      </button>
-                      <button
-                        onClick={() => actualizarEstadoAsistencia(asiId, 'justificado')}
-                        disabled={actualizando || estatus === 'justificado'}
-                        style={{
-                          padding: '0.2rem 0.75rem',
-                          borderRadius: '6px',
-                          border: 'none',
-                          fontSize: '0.75rem',
-                          fontWeight: 500,
-                          cursor: estatus === 'justificado' ? 'default' : 'pointer',
-                          backgroundColor: estatus === 'justificado' ? '#FEF3C7' : '#E5E7EB',
-                          color: estatus === 'justificado' ? '#92400E' : '#4B5563',
-                          display: 'flex',
-                          alignItems: 'center',
-                          gap: '0.25rem',
-                          transition: 'all 0.2s'
-                        }}
-                        onMouseEnter={(e) => {
-                          if (estatus !== 'justificado') {
-                            e.currentTarget.style.backgroundColor = '#FEF3C7';
-                            e.currentTarget.style.color = '#92400E';
-                          }
-                        }}
-                        onMouseLeave={(e) => {
-                          if (estatus !== 'justificado') {
-                            e.currentTarget.style.backgroundColor = '#E5E7EB';
-                            e.currentTarget.style.color = '#4B5563';
-                          }
-                        }}
-                      >
-                        <FaUserCheck size={10} /> Justificado
                       </button>
                     </div>
                   </div>
@@ -571,45 +831,23 @@ export default function ReunionDetalle() {
               })}
             </div>
 
-            {/* Resumen de asistencias */}
-            <div style={{
-              marginTop: '1.5rem',
-              paddingTop: '1rem',
-              borderTop: '1px solid #E5E7EB',
-              display: 'grid',
-              gridTemplateColumns: 'repeat(3, 1fr)',
-              gap: '0.75rem',
-              textAlign: 'center'
-            }}>
-              <div style={{ backgroundColor: '#D1FAE5', padding: '0.75rem', borderRadius: '8px' }}>
-                <div style={{ fontSize: '1.5rem', fontWeight: 'bold', color: '#065F46' }}>
+            <div className="mt-4 pt-4 border-t border-gray-200 grid grid-cols-2 gap-3 text-center">
+              <div className="bg-green-100 p-3 rounded-lg">
+                <div className="text-2xl font-bold text-green-700">
                   {invitados.filter(i => (i.estatus || i.asi_estatus || '').toLowerCase() === 'presente').length}
                 </div>
-                <div style={{ fontSize: '0.75rem', color: '#065F46' }}>Presentes</div>
+                <div className="text-xs text-green-700">Presentes</div>
               </div>
-              <div style={{ backgroundColor: '#FEE2E2', padding: '0.75rem', borderRadius: '8px' }}>
-                <div style={{ fontSize: '1.5rem', fontWeight: 'bold', color: '#991B1B' }}>
+              <div className="bg-red-100 p-3 rounded-lg">
+                <div className="text-2xl font-bold text-red-700">
                   {invitados.filter(i => (i.estatus || i.asi_estatus || '').toLowerCase() === 'ausente').length}
                 </div>
-                <div style={{ fontSize: '0.75rem', color: '#991B1B' }}>Ausentes</div>
-              </div>
-              <div style={{ backgroundColor: '#FEF3C7', padding: '0.75rem', borderRadius: '8px' }}>
-                <div style={{ fontSize: '1.5rem', fontWeight: 'bold', color: '#92400E' }}>
-                  {invitados.filter(i => (i.estatus || i.asi_estatus || '').toLowerCase() === 'justificado').length}
-                </div>
-                <div style={{ fontSize: '0.75rem', color: '#92400E' }}>Justificados</div>
+                <div className="text-xs text-red-700">Ausentes</div>
               </div>
             </div>
           </>
         )}
       </div>
-
-      <style>{`
-        @keyframes spin {
-          from { transform: rotate(0deg); }
-          to { transform: rotate(360deg); }
-        }
-      `}</style>
     </div>
   );
 }

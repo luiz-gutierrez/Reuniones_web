@@ -88,7 +88,7 @@ export default function Minutas() {
     setExito(false);
 
     const tareasIncompletas = tareas.some(t => 
-      !t.tar_nombre.trim() || !t.tar_fecha || !t.use_id
+      !t.tar_nombre.trim() || !t.tar_descripcion.trim() || !t.tar_fecha || !t.use_id
     );
 
     if (tareasIncompletas) {
@@ -223,12 +223,13 @@ export default function Minutas() {
               {/* Descripción de la tarea */}
               <div className="md:col-span-2">
                 <label className="block text-sm font-medium text-gray-700 mb-1.5">
-                  Descripción
+                  Descripción *
                 </label>
                 <textarea
                   placeholder="Detalles de la tarea..."
                   value={tarea.tar_descripcion}
                   onChange={(e) => actualizarTarea(index, 'tar_descripcion', e.target.value)}
+                  required
                   rows="2"
                   className="w-full px-3.5 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition-shadow resize-y text-gray-700"
                 />
