@@ -1,6 +1,9 @@
 // pages/asistente/ReunionDetalle.jsx
 import { useEffect, useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
+import { generarPDFReunion } from '../../utils/generarPDFReunion' 
+import { logoBase64 } from '../../utils/logoBase64';
+
 import api from '../../api/axios';
 import {
   FaCalendarAlt,
@@ -23,7 +26,8 @@ import {
   FaSave,
   FaCheckCircle,
   FaPencilAlt,
-  FaTimesCircle
+  FaTimesCircle,
+  FaFilePdf
 } from 'react-icons/fa';
 
 export default function ReunionDetalle() {
@@ -54,6 +58,12 @@ export default function ReunionDetalle() {
   });
   const [guardandoReunion, setGuardandoReunion] = useState(false);
 
+   const handleDescargarPDF = () => {
+  generarPDFReunion(reunion, invitados, tareasGuardadas, {
+    nombre: 'DISTRIBUCIONES AUTOPARTES GARCIA JIMENEZ S.A. DE C.V.',
+    logoBase64: logoBase64,
+  });
+};
   useEffect(() => {
     if (id) {
       cargarDatos(id);
@@ -497,7 +507,16 @@ export default function ReunionDetalle() {
         <FaArrowLeft className="transition-transform group-hover:-translate-x-1" />
         <span>Volver a Agenda</span>
       </button>
-
+      <div className="flex gap-2">
+        <button 
+  onClick={handleDescargarPDF}
+  className="bg-green-600 hover:bg-green-700 text-white px-4 py-1.5 rounded-md text-sm flex items-center gap-1.5 transition-colors"
+>
+  <FaFilePdf size={14} /> Descargar PDF
+</button>
+      </div>
+      <br/>
+      
       {/* Tarjeta principal */}
       <div className="bg-white rounded-lg p-6 shadow-sm mb-6">
         <div className="flex flex-wrap justify-between items-start gap-4 mb-6">
