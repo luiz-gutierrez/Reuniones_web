@@ -184,53 +184,195 @@ async function eliminarTarea(req, res) {
   }
 }
 
-// PUT /api/tareas/:id - Actualizar estado de una tarea
+// GET /api/tareas/usuario/:userId - Obtener tareas de un usuario específico
+async function getTareasByUsuario(req, res) {
+  const { userId } = req.params;
+
+  try {
+    // Primero, verifica que el usuario existe
+    const [userCheck] = await pool.query(
+      'SELECT id FROM users WHERE id = ?',
+      [userId]
+    );
+
+    if (userCheck.length === 0) {
+      return res.status(404).json({
+        message: 'Usuario no encontrado'
+      });
+    }
+
+    // Obtener las tareas del usuario
+    const [rows] = await pool.query(
+      `SELECT 
+        t.tar_id,
+        t.tar_nombre,
+        t.tar_descripcion,
+        t.tar_fecha,
+        t.tar_estatus,
+        t.tar_prioridad,
+        t.use_id,
+        u.nombre as usuario_nombre,
+        u.apellido as usuario_apellido,
+        u.correo as usuario_correo
+      FROM tareas t
+      INNER JOIN users u ON t.use_id = u.id
+      WHERE t.use_id = ?
+      ORDER BY t.tar_fecha DESC, 
+               CASE t.tar_prioridad 
+                 WHEN 'alta' THEN 1
+                 WHEN 'media' THEN 2
+                 WHEN 'baja' THEN 3
+               END ASC`,
+      [userId]
+    );
+
+    return res.json(rows);
+
+  } catch (error) {
+    console.error('❌ Error al obtener tareas del usuario:', error);
+    // Envía más detalles del error para depurar
+    return res.status(500).json({
+      message: 'Error al obtener tareas del usuario',
+      error: error.message,
+      sql: error.sql // Solo para depuración
+    });
+  }
+}
+
 async function actualizarEstadoTarea(req, res) {
   const { id } = req.params;
-  const { tar_estado } = req.body;
+  const { tar_estatus } = req.body;
 
+  // Validar que el ID existe
   if (!id) {
     return res.status(400).json({
+      success: false,
       message: 'ID de tarea requerido'
     });
   }
 
-  if (!['pendiente', 'en progreso', 'completada'].includes(tar_estado)) {
+  // Validar que el estatus sea válido (solo Iniciar, Proceso, Revisión)
+  const estatusValidos = ['Iniciar', 'Proceso', 'Revisión'];
+  if (!estatusValidos.includes(tar_estatus)) {
     return res.status(400).json({
-      message: 'Estado inválido. Debe ser: pendiente, en progreso o completada'
+      success: false,
+      message: 'Estado inválido. Debe ser: Iniciar, Proceso o Revisión'
     });
   }
 
   try {
-    const [result] = await pool.query(
-      `UPDATE tareas 
-       SET tar_estado = ?
-       WHERE tar_id = ?`,
-      [tar_estado, id]
+    // Verificar que la tarea existe
+    const [tareaExistente] = await pool.query(
+      'SELECT tar_id, tar_estatus FROM tareas WHERE tar_id = ?',
+      [id]
     );
 
-    if (result.affectedRows === 0) {
+    if (tareaExistente.length === 0) {
       return res.status(404).json({
+        success: false,
         message: 'Tarea no encontrada'
       });
     }
 
-    return res.json({
-      message: 'Estado actualizado correctamente'
+    // Actualizar el estado
+    const [result] = await pool.query(
+      `UPDATE tareas 
+       SET tar_estatus = ?
+       WHERE tar_id = ?`,
+      [tar_estatus, id]
+    );
+
+    if (result.affectedRows === 0) {
+      return res.status(404).json({
+        success: false,
+        message: 'No se pudo actualizar la tarea'
+      });
+    }
+
+    // Obtener la tarea actualizada
+    const [tareaActualizada] = await pool.query(
+      `SELECT 
+        t.tar_id,
+        t.tar_nombre,
+        t.tar_descripcion,
+        t.tar_fecha,
+        t.tar_estatus,
+        t.tar_prioridad,
+        t.use_id,
+        u.nombre as usuario_nombre,
+        u.apellido as usuario_apellido
+      FROM tareas t
+      INNER JOIN users u ON t.use_id = u.id
+      WHERE t.tar_id = ?`,
+      [id]
+    );
+
+    return res.status(200).json({
+      success: true,
+      message: `Estado actualizado a "${tar_estatus}" correctamente`,
+      tarea: tareaActualizada[0]
     });
 
   } catch (error) {
-    console.error('Error al actualizar estado:', error);
+    console.error('❌ Error al actualizar estado:', error);
     return res.status(500).json({
-      message: 'Error al actualizar estado'
+      success: false,
+      message: 'Error al actualizar el estado de la tarea',
+      error: error.message
     });
   }
 }
+
+// GET /api/tareas/usuario/:userId/todas - Obtener TODAS las tareas del usuario
+async function getTareasByUsuarioAll(req, res) {
+  const { userId } = req.params;
+
+  try {
+    const [rows] = await pool.query(
+      `SELECT 
+        t.tar_id,
+        t.tar_nombre,
+        t.tar_descripcion,
+        t.tar_fecha,
+        t.tar_estatus,
+        t.tar_prioridad,
+        t.use_id,
+        t.update_at,
+        u.nombre as usuario_nombre,
+        u.apellido as usuario_apellido,
+        u.correo as usuario_correo
+      FROM tareas t
+      INNER JOIN users u ON t.use_id = u.id
+      WHERE t.use_id = ?
+      ORDER BY 
+        CASE t.tar_estatus
+          WHEN 'Iniciar' THEN 1
+          WHEN 'Proceso' THEN 2
+          WHEN 'Revisión' THEN 3
+          WHEN 'Finalizado' THEN 4
+        END,
+        t.tar_prioridad DESC,
+        t.tar_fecha ASC`,
+      [userId]
+    );
+
+    return res.json(rows);
+  } catch (error) {
+    console.error('❌ Error al obtener todas las tareas del usuario:', error);
+    return res.status(500).json({
+      message: 'Error al obtener todas las tareas del usuario',
+      error: error.message
+    });
+  }
+}
+
 
 export {
   crearTareas,
   getTareasByReunion,
   actualizarTarea,
   eliminarTarea,
-  actualizarEstadoTarea
+  getTareasByUsuario,
+  actualizarEstadoTarea,
+  getTareasByUsuarioAll
 };

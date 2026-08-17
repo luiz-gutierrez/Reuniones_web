@@ -14,9 +14,11 @@ import AsistenteAgenda from './pages/asistente/Agenda';
 import AsistenteReunionDetalle from './pages/asistente/ReunionDetalle';
 import AsistenteMinutas from './pages/asistente/Minutas';
 
+import GerenteInicio from './pages/gerente/Inicio';
+import GerenteTareas from './pages/gerente/Tareas';
+
 import JefeDeptoInicio from './pages/jefe_depto/Inicio';
 
-import GerenteInicio from './pages/gerente/Inicio';
 
 import UsuarioInicio from './pages/usuario/Inicio';
 import UsuarioTareas from './pages/usuario/Tareas';
@@ -46,17 +48,18 @@ export default function App() {
           </Route>
         </Route>  
 
-        {/* Rutas del jefe de departamento */}
-        <Route element={<PrivateRoute allowedRoles={['JefeDepto']} />}>
-          <Route element={<MainLayout />}>
-            <Route path="/jefe_depto/inicio" element={<JefeDeptoInicio />} />
-          </Route>
-        </Route>
-
         {/* Rutas del gerente */}
         <Route element={<PrivateRoute allowedRoles={['Gerente']} />}>
           <Route element={<MainLayout />}>
             <Route path="/gerente/inicio" element={<GerenteInicio />} />
+            <Route path="/gerente/tareas" element={<GerenteTareas />}/>
+          </Route>
+        </Route>
+
+        {/* Rutas del jefe de departamento */}
+        <Route element={<PrivateRoute allowedRoles={['JefeDepto']} />}>
+          <Route element={<MainLayout />}>
+            <Route path="/jefe_depto/inicio" element={<JefeDeptoInicio />} />
           </Route>
         </Route>
 
