@@ -15,12 +15,6 @@ import {
   FaPlus
 } from 'react-icons/fa';
 
-const COLORS = {
-  primary: '#2563EB',
-  secondary: '#1E293B',
-  accent: '#F8FAFC',
-};
-
 export default function SecretariaReuniones() {
   const [reuniones, setReuniones] = useState([]);
   const [usuarios, setUsuarios] = useState([]);
@@ -234,48 +228,20 @@ export default function SecretariaReuniones() {
   );
 
   return (
-    <div style={{ padding: '1.5rem', maxWidth: '1280px', margin: '0 auto' }}>
+    <div className="p-6 max-w-7xl mx-auto">
       {/* Header */}
-      <div style={{
-        display: 'flex',
-        justifyContent: 'space-between',
-        alignItems: 'center',
-        flexWrap: 'wrap',
-        gap: '1rem',
-        marginBottom: '1.5rem'
-      }}>
+      <div className="flex justify-between items-center flex-wrap gap-4 mb-6">
         <div>
-          <h1 style={{ fontSize: '1.875rem', fontWeight: 'bold', color: COLORS.secondary, margin: 0 }}>
+          <h1 className="text-3xl font-bold text-slate-800 m-0">
             📋 Reuniones
           </h1>
-          <p style={{ color: COLORS.secondary, opacity: 0.6, margin: '0.25rem 0 0 0' }}>
+          <p className="text-slate-800 opacity-60 mt-1">
             Gestiona todas las reuniones programadas
           </p>
         </div>
         <button
           onClick={abrirModalCrear}
-          style={{
-            backgroundColor: COLORS.primary,
-            color: 'white',
-            border: 'none',
-            borderRadius: '0.75rem',
-            padding: '0.75rem 1.5rem',
-            cursor: 'pointer',
-            display: 'flex',
-            alignItems: 'center',
-            gap: '0.5rem',
-            fontWeight: 500,
-            transition: 'all 0.2s',
-            boxShadow: '0 4px 6px -1px rgba(37,99,235,0.3)'
-          }}
-          onMouseEnter={(e) => {
-            e.currentTarget.style.transform = 'scale(1.02)';
-            e.currentTarget.style.boxShadow = '0 10px 15px -3px rgba(37,99,235,0.4)';
-          }}
-          onMouseLeave={(e) => {
-            e.currentTarget.style.transform = 'scale(1)';
-            e.currentTarget.style.boxShadow = '0 4px 6px -1px rgba(37,99,235,0.3)';
-          }}
+          className="bg-blue-600 text-white border-none rounded-xl px-6 py-3 cursor-pointer flex items-center gap-2 font-medium transition-all hover:scale-105 hover:shadow-lg hover:shadow-blue-600/40 shadow-md shadow-blue-600/30"
         >
           <FaPlus /> Nueva Reunión
         </button>
@@ -283,101 +249,43 @@ export default function SecretariaReuniones() {
 
       {/* Lista de reuniones */}
       {cargando && (
-        <div style={{
-          textAlign: 'center',
-          padding: '3rem',
-          color: COLORS.secondary,
-          opacity: 0.6
-        }}>
-          <FaSpinner style={{ fontSize: '2rem', animation: 'spin 1s linear infinite' }} />
-          <p style={{ marginTop: '0.5rem' }}>Cargando reuniones...</p>
+        <div className="text-center py-12 text-slate-800 opacity-60">
+          <FaSpinner className="text-4xl animate-spin mx-auto" />
+          <p className="mt-2">Cargando reuniones...</p>
         </div>
       )}
 
       {error && (
-        <div style={{
-          backgroundColor: '#FEE2E2',
-          border: '1px solid #FCA5A5',
-          color: '#991B1B',
-          padding: '1rem',
-          borderRadius: '0.75rem',
-          marginBottom: '1.5rem'
-        }}>
+        <div className="bg-red-100 border border-red-300 text-red-800 p-4 rounded-xl mb-6">
           {error}
         </div>
       )}
 
       {!cargando && !error && (
-        <div style={{
-          display: 'grid',
-          gridTemplateColumns: 'repeat(auto-fill, minmax(350px, 1fr))',
-          gap: '1rem'
-        }}>
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
           {reuniones.length === 0 ? (
-            <div style={{
-              gridColumn: '1 / -1',
-              textAlign: 'center',
-              padding: '3rem',
-              color: COLORS.secondary,
-              opacity: 0.4
-            }}>
-              <p style={{ fontSize: '1.125rem' }}>No hay reuniones programadas</p>
-              <p style={{ fontSize: '0.875rem' }}>Haz clic en "Nueva Reunión" para crear una</p>
+            <div className="col-span-full text-center py-12 text-slate-800 opacity-40">
+              <p className="text-lg">No hay reuniones programadas</p>
+              <p className="text-sm">Haz clic en "Nueva Reunión" para crear una</p>
             </div>
           ) : (
             reuniones.map((r) => (
               <div
                 key={r.reu_id}
-                style={{
-                  backgroundColor: 'white',
-                  borderRadius: '1rem',
-                  padding: '1.5rem',
-                  boxShadow: '0 4px 6px -1px rgba(0,0,0,0.1)',
-                  transition: 'all 0.2s',
-                  borderLeft: `4px solid ${COLORS.primary}`
-                }}
-                onMouseEnter={(e) => {
-                  e.currentTarget.style.transform = 'translateY(-4px)';
-                  e.currentTarget.style.boxShadow = '0 10px 15px -3px rgba(0,0,0,0.2)';
-                }}
-                onMouseLeave={(e) => {
-                  e.currentTarget.style.transform = 'translateY(0)';
-                  e.currentTarget.style.boxShadow = '0 4px 6px -1px rgba(0,0,0,0.1)';
-                }}
+                className="bg-white rounded-2xl p-6 shadow-md transition-all hover:-translate-y-1 hover:shadow-lg border-l-4 border-l-blue-600"
               >
-                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
-                  <h3 style={{ fontSize: '1.125rem', fontWeight: '600', color: COLORS.secondary, margin: 0 }}>
+                <div className="flex justify-between items-start">
+                  <h3 className="text-lg font-semibold text-slate-800 m-0">
                     {r.reu_nombre}
                   </h3>
-                  <div style={{ display: 'flex', gap: '0.5rem' }}>
-                    <span style={{
-                      backgroundColor: '#DBEAFE',
-                      color: '#1E40AF',
-                      padding: '0.25rem 0.75rem',
-                      borderRadius: '9999px',
-                      fontSize: '0.75rem',
-                      fontWeight: 500,
-                      display: 'flex',
-                      alignItems: 'center',
-                      gap: '0.25rem'
-                    }}>
+                  <div className="flex gap-2">
+                    <span className="bg-blue-100 text-blue-800 px-3 py-1 rounded-full text-xs font-medium flex items-center gap-1">
                       <FaUsers size={12} />
                       {r.total_invitados || 0}
                     </span>
                     <button
                       onClick={() => abrirModalAsistentes(r)}
-                      style={{
-                        backgroundColor: COLORS.primary,
-                        color: 'white',
-                        border: 'none',
-                        borderRadius: '0.5rem',
-                        padding: '0.25rem 0.75rem',
-                        cursor: 'pointer',
-                        fontSize: '0.75rem',
-                        transition: 'all 0.2s'
-                      }}
-                      onMouseEnter={(e) => e.currentTarget.style.opacity = '0.8'}
-                      onMouseLeave={(e) => e.currentTarget.style.opacity = '1'}
+                      className="bg-blue-600 text-white border-none rounded-lg px-3 py-1 cursor-pointer text-xs transition-all hover:opacity-80"
                     >
                       Editar
                     </button>
@@ -385,33 +293,22 @@ export default function SecretariaReuniones() {
                 </div>
 
                 {r.reu_descripcion && (
-                  <p style={{
-                    fontSize: '0.875rem',
-                    color: COLORS.secondary,
-                    opacity: 0.7,
-                    margin: '0.5rem 0 1rem 0'
-                  }}>
+                  <p className="text-sm text-slate-800 opacity-70 my-2">
                     {r.reu_descripcion}
                   </p>
                 )}
 
-                <div style={{
-                  display: 'flex',
-                  flexDirection: 'column',
-                  gap: '0.5rem',
-                  borderTop: `1px solid ${COLORS.accent}`,
-                  paddingTop: '0.75rem'
-                }}>
-                  <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', color: COLORS.secondary, fontSize: '0.875rem' }}>
-                    <FaCalendarAlt style={{ color: COLORS.primary }} />
+                <div className="flex flex-col gap-2 border-t border-slate-100 pt-3">
+                  <div className="flex items-center gap-2 text-slate-800 text-sm">
+                    <FaCalendarAlt className="text-blue-600" />
                     <span>{formatearFecha(r.reu_fecha)}</span>
                   </div>
-                  <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', color: COLORS.secondary, fontSize: '0.875rem' }}>
-                    <FaClock style={{ color: COLORS.primary }} />
+                  <div className="flex items-center gap-2 text-slate-800 text-sm">
+                    <FaClock className="text-blue-600" />
                     <span>{r.reu_hora}</span>
                   </div>
-                  <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', color: COLORS.secondary, fontSize: '0.875rem', opacity: 0.6 }}>
-                    <FaUser style={{ color: COLORS.primary }} />
+                  <div className="flex items-center gap-2 text-slate-800 text-sm opacity-60">
+                    <FaUser className="text-blue-600" />
                     <span>Creada por: {r.creado_por_nombre}</span>
                   </div>
                 </div>
@@ -423,56 +320,25 @@ export default function SecretariaReuniones() {
 
       {/* Modal para crear reunión */}
       {mostrarModalCrear && (
-        <div style={{
-          position: 'fixed',
-          inset: 0,
-          backgroundColor: 'rgba(0,0,0,0.5)',
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'center',
-          zIndex: 50,
-          padding: '1rem'
-        }}
-        onClick={cerrarModalCrear}>
-          <div style={{
-            backgroundColor: 'white',
-            borderRadius: '1rem',
-            padding: '2rem',
-            maxWidth: '700px',
-            width: '100%',
-            maxHeight: '90vh',
-            overflowY: 'auto'
-          }}
-          onClick={(e) => e.stopPropagation()}>
-            <div style={{
-              display: 'flex',
-              justifyContent: 'space-between',
-              alignItems: 'center',
-              marginBottom: '1.5rem'
-            }}>
-              <h2 style={{ fontSize: '1.5rem', fontWeight: 'bold', color: COLORS.secondary, margin: 0 }}>
-                <FaUserPlus style={{ marginRight: '0.5rem' }} />
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4" onClick={cerrarModalCrear}>
+          <div className="bg-white rounded-2xl p-8 max-w-2xl w-full max-h-[90vh] overflow-y-auto" onClick={(e) => e.stopPropagation()}>
+            <div className="flex justify-between items-center mb-6">
+              <h2 className="text-2xl font-bold text-slate-800 m-0">
+                <FaUserPlus className="inline mr-2" />
                 Nueva Reunión
               </h2>
               <button
                 onClick={cerrarModalCrear}
-                style={{
-                  background: 'none',
-                  border: 'none',
-                  fontSize: '1.5rem',
-                  color: COLORS.secondary,
-                  opacity: 0.4,
-                  cursor: 'pointer'
-                }}
+                className="bg-none border-none text-2xl text-slate-800 opacity-40 cursor-pointer hover:opacity-60 transition-opacity"
               >
                 <FaTimes />
               </button>
             </div>
 
             <form onSubmit={handleCrear}>
-              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '1rem' }}>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div>
-                  <label style={{ display: 'block', fontSize: '0.875rem', fontWeight: 500, color: COLORS.secondary, marginBottom: '0.25rem' }}>
+                  <label className="block text-sm font-medium text-slate-800 mb-1">
                     Nombre *
                   </label>
                   <input
@@ -481,28 +347,12 @@ export default function SecretariaReuniones() {
                     value={nombre}
                     onChange={(e) => setNombre(e.target.value)}
                     required
-                    style={{
-                      width: '100%',
-                      padding: '0.75rem',
-                      border: `1px solid ${COLORS.accent}`,
-                      borderRadius: '0.5rem',
-                      fontSize: '0.875rem',
-                      outline: 'none',
-                      boxSizing: 'border-box'
-                    }}
-                    onFocus={(e) => {
-                      e.currentTarget.style.borderColor = COLORS.primary;
-                      e.currentTarget.style.boxShadow = '0 0 0 2px rgba(37,99,235,0.2)';
-                    }}
-                    onBlur={(e) => {
-                      e.currentTarget.style.borderColor = COLORS.accent;
-                      e.currentTarget.style.boxShadow = 'none';
-                    }}
+                    className="w-full px-4 py-3 border border-slate-200 rounded-lg text-sm outline-none focus:border-blue-600 focus:ring-2 focus:ring-blue-600/20 box-border transition-all"
                   />
                 </div>
 
                 <div>
-                  <label style={{ display: 'block', fontSize: '0.875rem', fontWeight: 500, color: COLORS.secondary, marginBottom: '0.25rem' }}>
+                  <label className="block text-sm font-medium text-slate-800 mb-1">
                     Lugar *
                   </label>
                   <input
@@ -511,28 +361,12 @@ export default function SecretariaReuniones() {
                     value={lugar}
                     onChange={(e) => setLugar(e.target.value)}
                     required
-                    style={{
-                      width: '100%',
-                      padding: '0.75rem',
-                      border: `1px solid ${COLORS.accent}`,
-                      borderRadius: '0.5rem',
-                      fontSize: '0.875rem',
-                      outline: 'none',
-                      boxSizing: 'border-box'
-                    }}
-                    onFocus={(e) => {
-                      e.currentTarget.style.borderColor = COLORS.primary;
-                      e.currentTarget.style.boxShadow = '0 0 0 2px rgba(37,99,235,0.2)';
-                    }}
-                    onBlur={(e) => {
-                      e.currentTarget.style.borderColor = COLORS.accent;
-                      e.currentTarget.style.boxShadow = 'none';
-                    }}
+                    className="w-full px-4 py-3 border border-slate-200 rounded-lg text-sm outline-none focus:border-blue-600 focus:ring-2 focus:ring-blue-600/20 box-border transition-all"
                   />
                 </div>
 
                 <div>
-                  <label style={{ display: 'block', fontSize: '0.875rem', fontWeight: 500, color: COLORS.secondary, marginBottom: '0.25rem' }}>
+                  <label className="block text-sm font-medium text-slate-800 mb-1">
                     Fecha *
                   </label>
                   <input
@@ -540,28 +374,12 @@ export default function SecretariaReuniones() {
                     value={fecha}
                     onChange={(e) => setFecha(e.target.value)}
                     required
-                    style={{
-                      width: '100%',
-                      padding: '0.75rem',
-                      border: `1px solid ${COLORS.accent}`,
-                      borderRadius: '0.5rem',
-                      fontSize: '0.875rem',
-                      outline: 'none',
-                      boxSizing: 'border-box'
-                    }}
-                    onFocus={(e) => {
-                      e.currentTarget.style.borderColor = COLORS.primary;
-                      e.currentTarget.style.boxShadow = '0 0 0 2px rgba(37,99,235,0.2)';
-                    }}
-                    onBlur={(e) => {
-                      e.currentTarget.style.borderColor = COLORS.accent;
-                      e.currentTarget.style.boxShadow = 'none';
-                    }}
+                    className="w-full px-4 py-3 border border-slate-200 rounded-lg text-sm outline-none focus:border-blue-600 focus:ring-2 focus:ring-blue-600/20 box-border transition-all"
                   />
                 </div>
 
                 <div>
-                  <label style={{ display: 'block', fontSize: '0.875rem', fontWeight: 500, color: COLORS.secondary, marginBottom: '0.25rem' }}>
+                  <label className="block text-sm font-medium text-slate-800 mb-1">
                     Hora *
                   </label>
                   <input
@@ -569,28 +387,12 @@ export default function SecretariaReuniones() {
                     value={hora}
                     onChange={(e) => setHora(e.target.value)}
                     required
-                    style={{
-                      width: '100%',
-                      padding: '0.75rem',
-                      border: `1px solid ${COLORS.accent}`,
-                      borderRadius: '0.5rem',
-                      fontSize: '0.875rem',
-                      outline: 'none',
-                      boxSizing: 'border-box'
-                    }}
-                    onFocus={(e) => {
-                      e.currentTarget.style.borderColor = COLORS.primary;
-                      e.currentTarget.style.boxShadow = '0 0 0 2px rgba(37,99,235,0.2)';
-                    }}
-                    onBlur={(e) => {
-                      e.currentTarget.style.borderColor = COLORS.accent;
-                      e.currentTarget.style.boxShadow = 'none';
-                    }}
+                    className="w-full px-4 py-3 border border-slate-200 rounded-lg text-sm outline-none focus:border-blue-600 focus:ring-2 focus:ring-blue-600/20 box-border transition-all"
                   />
                 </div>
 
-                <div style={{ gridColumn: '1 / -1' }}>
-                  <label style={{ display: 'block', fontSize: '0.875rem', fontWeight: 500, color: COLORS.secondary, marginBottom: '0.25rem' }}>
+                <div className="col-span-full">
+                  <label className="block text-sm font-medium text-slate-800 mb-1">
                     Descripción
                   </label>
                   <textarea
@@ -598,90 +400,40 @@ export default function SecretariaReuniones() {
                     value={descripcion}
                     onChange={(e) => setDescripcion(e.target.value)}
                     rows="2"
-                    style={{
-                      width: '100%',
-                      padding: '0.75rem',
-                      border: `1px solid ${COLORS.accent}`,
-                      borderRadius: '0.5rem',
-                      fontSize: '0.875rem',
-                      outline: 'none',
-                      boxSizing: 'border-box',
-                      resize: 'vertical',
-                      fontFamily: 'inherit'
-                    }}
-                    onFocus={(e) => {
-                      e.currentTarget.style.borderColor = COLORS.primary;
-                      e.currentTarget.style.boxShadow = '0 0 0 2px rgba(37,99,235,0.2)';
-                    }}
-                    onBlur={(e) => {
-                      e.currentTarget.style.borderColor = COLORS.accent;
-                      e.currentTarget.style.boxShadow = 'none';
-                    }}
+                    className="w-full px-4 py-3 border border-slate-200 rounded-lg text-sm outline-none focus:border-blue-600 focus:ring-2 focus:ring-blue-600/20 box-border resize-y font-inherit transition-all"
                   />
                 </div>
 
                 {/* Sección de invitados */}
-                <div style={{ gridColumn: '1 / -1' }}>
-                  <label style={{ display: 'block', fontSize: '0.875rem', fontWeight: 500, color: COLORS.secondary, marginBottom: '0.25rem' }}>
-                    <FaUsers style={{ marginRight: '0.5rem' }} />
+                <div className="col-span-full">
+                  <label className="block text-sm font-medium text-slate-800 mb-1">
+                    <FaUsers className="inline mr-2" />
                     Invitados * ({invitados.length} seleccionados)
                   </label>
                   
-                  <div style={{
-                    backgroundColor: COLORS.accent,
-                    borderRadius: '0.5rem',
-                    padding: '0.75rem',
-                    marginBottom: '0.75rem',
-                    display: 'flex',
-                    alignItems: 'center',
-                    gap: '0.75rem'
-                  }}>
-                    <FaSearch style={{ color: COLORS.secondary, opacity: 0.4 }} />
+                  <div className="bg-slate-50 rounded-lg p-3 mb-3 flex items-center gap-3">
+                    <FaSearch className="text-slate-800 opacity-40" />
                     <input
                       type="text"
                       placeholder="Buscar usuarios para invitar..."
                       value={busquedaUsuario}
                       onChange={(e) => setBusquedaUsuario(e.target.value)}
-                      style={{
-                        flex: 1,
-                        border: 'none',
-                        outline: 'none',
-                        fontSize: '0.875rem',
-                        color: COLORS.secondary,
-                        background: 'transparent'
-                      }}
+                      className="flex-1 border-none outline-none text-sm text-slate-800 bg-transparent"
                     />
                     {invitados.length > 0 && (
                       <button
                         type="button"
                         onClick={() => setInvitados([])}
-                        style={{
-                          padding: '0.25rem 0.75rem',
-                          backgroundColor: '#FEE2E2',
-                          border: 'none',
-                          borderRadius: '0.25rem',
-                          color: '#991B1B',
-                          cursor: 'pointer',
-                          fontSize: '0.75rem',
-                          transition: 'all 0.2s'
-                        }}
-                        onMouseEnter={(e) => e.currentTarget.style.backgroundColor = '#FCA5A5'}
-                        onMouseLeave={(e) => e.currentTarget.style.backgroundColor = '#FEE2E2'}
+                        className="px-3 py-1 bg-red-100 border-none rounded text-red-800 cursor-pointer text-xs transition-all hover:bg-red-200"
                       >
                         Limpiar todos
                       </button>
                     )}
                   </div>
 
-                  <div style={{
-                    maxHeight: '200px',
-                    overflowY: 'auto',
-                    border: `1px solid ${COLORS.accent}`,
-                    borderRadius: '0.5rem',
-                    padding: '0.5rem'
-                  }}>
+                  <div className="max-h-48 overflow-y-auto border border-slate-200 rounded-lg p-2">
                     {usuariosFiltrados.length === 0 ? (
-                      <p style={{ textAlign: 'center', color: COLORS.secondary, opacity: 0.4, padding: '1rem' }}>
+                      <p className="text-center text-slate-800 opacity-40 py-4">
                         {busquedaUsuario ? 'No se encontraron usuarios' : 'No hay usuarios disponibles'}
                       </p>
                     ) : (
@@ -691,52 +443,27 @@ export default function SecretariaReuniones() {
                           <div
                             key={u.id}
                             onClick={() => toggleInvitado(u.id)}
-                            style={{
-                              display: 'flex',
-                              alignItems: 'center',
-                              gap: '0.75rem',
-                              padding: '0.5rem 0.75rem',
-                              borderRadius: '0.5rem',
-                              cursor: 'pointer',
-                              transition: 'all 0.2s',
-                              backgroundColor: seleccionado ? '#DBEAFE' : 'transparent',
-                              border: seleccionado ? `1px solid ${COLORS.primary}` : '1px solid transparent'
-                            }}
-                            onMouseEnter={(e) => {
-                              if (!seleccionado) {
-                                e.currentTarget.style.backgroundColor = COLORS.accent;
-                              }
-                            }}
-                            onMouseLeave={(e) => {
-                              if (!seleccionado) {
-                                e.currentTarget.style.backgroundColor = 'transparent';
-                              }
-                            }}
+                            className={`flex items-center gap-3 px-3 py-2 rounded-lg cursor-pointer transition-all ${
+                              seleccionado 
+                                ? 'bg-blue-100 border border-blue-600' 
+                                : 'bg-transparent border border-transparent hover:bg-slate-50'
+                            }`}
                           >
-                            <div style={{
-                              width: '32px',
-                              height: '32px',
-                              borderRadius: '50%',
-                              backgroundColor: seleccionado ? COLORS.primary : COLORS.accent,
-                              display: 'flex',
-                              alignItems: 'center',
-                              justifyContent: 'center',
-                              color: seleccionado ? 'white' : COLORS.secondary,
-                              fontWeight: 600,
-                              fontSize: '0.75rem'
-                            }}>
+                            <div className={`w-8 h-8 rounded-full flex items-center justify-center font-semibold text-xs ${
+                              seleccionado ? 'bg-blue-600 text-white' : 'bg-slate-100 text-slate-800'
+                            }`}>
                               {u.nombre?.charAt(0)}{u.apellido?.charAt(0)}
                             </div>
-                            <div style={{ flex: 1 }}>
-                              <div style={{ fontSize: '0.875rem', fontWeight: 500, color: COLORS.secondary }}>
+                            <div className="flex-1">
+                              <div className="text-sm font-medium text-slate-800">
                                 {u.nombre} {u.apellido}
                               </div>
-                              <div style={{ fontSize: '0.75rem', color: COLORS.secondary, opacity: 0.5 }}>
+                              <div className="text-xs text-slate-800 opacity-50">
                                 {u.correo}
                               </div>
                             </div>
                             {seleccionado && (
-                              <FaCheck style={{ color: COLORS.primary }} />
+                              <FaCheck className="text-blue-600" />
                             )}
                           </div>
                         );
@@ -747,66 +474,29 @@ export default function SecretariaReuniones() {
               </div>
 
               {error && (
-                <div style={{
-                  backgroundColor: '#FEE2E2',
-                  border: '1px solid #FCA5A5',
-                  color: '#991B1B',
-                  padding: '0.75rem',
-                  borderRadius: '0.5rem',
-                  fontSize: '0.875rem',
-                  marginTop: '1rem'
-                }}>
+                <div className="bg-red-100 border border-red-300 text-red-800 p-3 rounded-lg text-sm mt-4">
                   {error}
                 </div>
               )}
 
-              <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '0.75rem', marginTop: '1rem' }}>
+              <div className="flex justify-end gap-3 mt-4">
                 <button
                   type="button"
                   onClick={cerrarModalCrear}
-                  style={{
-                    padding: '0.75rem 1.5rem',
-                    border: `1px solid ${COLORS.accent}`,
-                    borderRadius: '0.5rem',
-                    backgroundColor: 'white',
-                    color: COLORS.secondary,
-                    cursor: 'pointer',
-                    transition: 'all 0.2s'
-                  }}
-                  onMouseEnter={(e) => e.currentTarget.style.backgroundColor = COLORS.accent}
-                  onMouseLeave={(e) => e.currentTarget.style.backgroundColor = 'white'}
+                  className="px-6 py-3 border border-slate-200 rounded-lg bg-white text-slate-800 cursor-pointer transition-all hover:bg-slate-50"
                 >
                   Cancelar
                 </button>
                 <button
                   type="submit"
                   disabled={guardando}
-                  style={{
-                    padding: '0.75rem 2rem',
-                    backgroundColor: COLORS.primary,
-                    color: 'white',
-                    border: 'none',
-                    borderRadius: '0.5rem',
-                    cursor: guardando ? 'not-allowed' : 'pointer',
-                    display: 'flex',
-                    alignItems: 'center',
-                    gap: '0.5rem',
-                    fontWeight: 500,
-                    transition: 'all 0.2s',
-                    opacity: guardando ? 0.6 : 1
-                  }}
-                  onMouseEnter={(e) => {
-                    if (!guardando) {
-                      e.currentTarget.style.transform = 'scale(1.02)';
-                    }
-                  }}
-                  onMouseLeave={(e) => {
-                    e.currentTarget.style.transform = 'scale(1)';
-                  }}
+                  className={`px-8 py-3 bg-blue-600 text-white border-none rounded-lg cursor-pointer flex items-center gap-2 font-medium transition-all hover:scale-105 ${
+                    guardando ? 'opacity-60 cursor-not-allowed' : ''
+                  }`}
                 >
                   {guardando ? (
                     <>
-                      <FaSpinner style={{ animation: 'spin 1s linear infinite' }} />
+                      <FaSpinner className="animate-spin" />
                       Creando...
                     </>
                   ) : (
@@ -823,86 +513,40 @@ export default function SecretariaReuniones() {
 
       {/* Modal para editar asistentes */}
       {mostrarModalAsistentes && (
-        <div style={{
-          position: 'fixed',
-          inset: 0,
-          backgroundColor: 'rgba(0,0,0,0.5)',
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'center',
-          zIndex: 50,
-          padding: '1rem'
-        }}
-        onClick={cerrarModalAsistentes}>
-          <div style={{
-            backgroundColor: 'white',
-            borderRadius: '1rem',
-            padding: '2rem',
-            maxWidth: '600px',
-            width: '100%',
-            maxHeight: '90vh',
-            overflowY: 'auto'
-          }}
-          onClick={(e) => e.stopPropagation()}>
-            <div style={{
-              display: 'flex',
-              justifyContent: 'space-between',
-              alignItems: 'center',
-              marginBottom: '1.5rem'
-            }}>
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4" onClick={cerrarModalAsistentes}>
+          <div className="bg-white rounded-2xl p-8 max-w-lg w-full max-h-[90vh] overflow-y-auto" onClick={(e) => e.stopPropagation()}>
+            <div className="flex justify-between items-center mb-6">
               <div>
-                <h2 style={{ fontSize: '1.5rem', fontWeight: 'bold', color: COLORS.secondary, margin: 0 }}>
-                  <FaUsers style={{ display: 'inline', marginRight: '0.5rem' }} />
+                <h2 className="text-2xl font-bold text-slate-800 m-0">
+                  <FaUsers className="inline mr-2" />
                   Editar Asistentes
                 </h2>
-                <p style={{ color: COLORS.secondary, opacity: 0.6, margin: '0.25rem 0 0 0', fontSize: '0.875rem' }}>
+                <p className="text-slate-800 opacity-60 text-sm mt-1">
                   {reunionSeleccionada?.reu_nombre} - {formatearFecha(reunionSeleccionada?.reu_fecha)}
                 </p>
               </div>
               <button
                 onClick={cerrarModalAsistentes}
-                style={{
-                  background: 'none',
-                  border: 'none',
-                  fontSize: '1.5rem',
-                  color: COLORS.secondary,
-                  opacity: 0.4,
-                  cursor: 'pointer'
-                }}
+                className="bg-none border-none text-2xl text-slate-800 opacity-40 cursor-pointer hover:opacity-60 transition-opacity"
               >
                 <FaTimes />
               </button>
             </div>
 
-            <div style={{
-              backgroundColor: COLORS.accent,
-              borderRadius: '0.5rem',
-              padding: '0.75rem',
-              marginBottom: '1rem',
-              display: 'flex',
-              alignItems: 'center',
-              gap: '0.75rem'
-            }}>
-              <FaSearch style={{ color: COLORS.secondary, opacity: 0.4 }} />
+            <div className="bg-slate-50 rounded-lg p-3 mb-4 flex items-center gap-3">
+              <FaSearch className="text-slate-800 opacity-40" />
               <input
                 type="text"
                 placeholder="Buscar usuarios..."
                 value={busquedaAsistente}
                 onChange={(e) => setBusquedaAsistente(e.target.value)}
-                style={{
-                  flex: 1,
-                  border: 'none',
-                  outline: 'none',
-                  fontSize: '0.875rem',
-                  color: COLORS.secondary,
-                  background: 'transparent'
-                }}
+                className="flex-1 border-none outline-none text-sm text-slate-800 bg-transparent"
               />
             </div>
 
-            <div style={{ maxHeight: '300px', overflowY: 'auto', marginBottom: '1rem' }}>
+            <div className="max-h-72 overflow-y-auto mb-4">
               {asistentesFiltrados.length === 0 ? (
-                <p style={{ textAlign: 'center', color: COLORS.secondary, opacity: 0.4, padding: '2rem' }}>
+                <p className="text-center text-slate-800 opacity-40 py-8">
                   No hay usuarios disponibles
                 </p>
               ) : (
@@ -912,52 +556,27 @@ export default function SecretariaReuniones() {
                     <div
                       key={u.id}
                       onClick={() => toggleAsistente(u.id)}
-                      style={{
-                        display: 'flex',
-                        alignItems: 'center',
-                        gap: '0.75rem',
-                        padding: '0.75rem',
-                        borderRadius: '0.5rem',
-                        cursor: 'pointer',
-                        transition: 'all 0.2s',
-                        backgroundColor: seleccionado ? '#DBEAFE' : 'transparent',
-                        border: seleccionado ? `1px solid ${COLORS.primary}` : '1px solid transparent'
-                      }}
-                      onMouseEnter={(e) => {
-                        if (!seleccionado) {
-                          e.currentTarget.style.backgroundColor = COLORS.accent;
-                        }
-                      }}
-                      onMouseLeave={(e) => {
-                        if (!seleccionado) {
-                          e.currentTarget.style.backgroundColor = 'transparent';
-                        }
-                      }}
+                      className={`flex items-center gap-3 px-3 py-3 rounded-lg cursor-pointer transition-all ${
+                        seleccionado 
+                          ? 'bg-blue-100 border border-blue-600' 
+                          : 'bg-transparent border border-transparent hover:bg-slate-50'
+                      }`}
                     >
-                      <div style={{
-                        width: '40px',
-                        height: '40px',
-                        borderRadius: '50%',
-                        backgroundColor: seleccionado ? COLORS.primary : COLORS.accent,
-                        display: 'flex',
-                        alignItems: 'center',
-                        justifyContent: 'center',
-                        color: seleccionado ? 'white' : COLORS.secondary,
-                        fontWeight: 600,
-                        fontSize: '0.875rem'
-                      }}>
+                      <div className={`w-10 h-10 rounded-full flex items-center justify-center font-semibold text-sm ${
+                        seleccionado ? 'bg-blue-600 text-white' : 'bg-slate-100 text-slate-800'
+                      }`}>
                         {u.nombre?.charAt(0)}{u.apellido?.charAt(0)}
                       </div>
-                      <div style={{ flex: 1 }}>
-                        <div style={{ fontWeight: 500, color: COLORS.secondary }}>
+                      <div className="flex-1">
+                        <div className="font-medium text-slate-800">
                           {u.nombre} {u.apellido}
                         </div>
-                        <div style={{ fontSize: '0.75rem', color: COLORS.secondary, opacity: 0.5 }}>
+                        <div className="text-xs text-slate-800 opacity-50">
                           {u.correo} • {u.puesto || 'Sin puesto'}
                         </div>
                       </div>
                       {seleccionado && (
-                        <FaCheck style={{ color: COLORS.primary, fontSize: '1.25rem' }} />
+                        <FaCheck className="text-blue-600 text-xl" />
                       )}
                     </div>
                   );
@@ -965,16 +584,11 @@ export default function SecretariaReuniones() {
               )}
             </div>
 
-            <div style={{
-              backgroundColor: COLORS.accent,
-              padding: '0.75rem',
-              borderRadius: '0.5rem',
-              marginBottom: '1rem'
-            }}>
-              <p style={{ fontSize: '0.875rem', color: COLORS.secondary, margin: 0 }}>
+            <div className="bg-slate-50 p-3 rounded-lg mb-4">
+              <p className="text-sm text-slate-800 m-0">
                 <strong>{asistentesSeleccionados.length}</strong> usuarios seleccionados
                 {asistentesGuardados.length > 0 && (
-                  <span style={{ marginLeft: '0.5rem', opacity: 0.6 }}>
+                  <span className="ml-2 opacity-60">
                     • {asistentesGuardados.length} actuales
                   </span>
                 )}
@@ -982,38 +596,16 @@ export default function SecretariaReuniones() {
             </div>
 
             {error && (
-              <div style={{
-                backgroundColor: '#FEE2E2',
-                border: '1px solid #FCA5A5',
-                color: '#991B1B',
-                padding: '0.75rem',
-                borderRadius: '0.5rem',
-                fontSize: '0.875rem',
-                marginBottom: '1rem'
-              }}>
+              <div className="bg-red-100 border border-red-300 text-red-800 p-3 rounded-lg text-sm mb-4">
                 {error}
               </div>
             )}
 
-            <div style={{
-              display: 'flex',
-              justifyContent: 'flex-end',
-              gap: '0.75rem'
-            }}>
+            <div className="flex justify-end gap-3">
               <button
                 type="button"
                 onClick={cerrarModalAsistentes}
-                style={{
-                  padding: '0.75rem 1.5rem',
-                  border: `1px solid ${COLORS.accent}`,
-                  borderRadius: '0.5rem',
-                  backgroundColor: 'white',
-                  color: COLORS.secondary,
-                  cursor: 'pointer',
-                  transition: 'all 0.2s'
-                }}
-                onMouseEnter={(e) => e.currentTarget.style.backgroundColor = COLORS.accent}
-                onMouseLeave={(e) => e.currentTarget.style.backgroundColor = 'white'}
+                className="px-6 py-3 border border-slate-200 rounded-lg bg-white text-slate-800 cursor-pointer transition-all hover:bg-slate-50"
               >
                 Cancelar
               </button>
@@ -1021,32 +613,13 @@ export default function SecretariaReuniones() {
                 type="button"
                 onClick={guardarAsistentes}
                 disabled={guardandoAsistentes}
-                style={{
-                  padding: '0.75rem 1.5rem',
-                  backgroundColor: COLORS.primary,
-                  color: 'white',
-                  border: 'none',
-                  borderRadius: '0.5rem',
-                  cursor: guardandoAsistentes ? 'not-allowed' : 'pointer',
-                  display: 'flex',
-                  alignItems: 'center',
-                  gap: '0.5rem',
-                  fontWeight: 500,
-                  transition: 'all 0.2s',
-                  opacity: guardandoAsistentes ? 0.6 : 1
-                }}
-                onMouseEnter={(e) => {
-                  if (!guardandoAsistentes) {
-                    e.currentTarget.style.transform = 'scale(1.02)';
-                  }
-                }}
-                onMouseLeave={(e) => {
-                  e.currentTarget.style.transform = 'scale(1)';
-                }}
+                className={`px-6 py-3 bg-blue-600 text-white border-none rounded-lg cursor-pointer flex items-center gap-2 font-medium transition-all hover:scale-105 ${
+                  guardandoAsistentes ? 'opacity-60 cursor-not-allowed' : ''
+                }`}
               >
                 {guardandoAsistentes ? (
                   <>
-                    <FaSpinner style={{ animation: 'spin 1s linear infinite' }} />
+                    <FaSpinner className="animate-spin" />
                     Guardando...
                   </>
                 ) : (
@@ -1059,13 +632,6 @@ export default function SecretariaReuniones() {
           </div>
         </div>
       )}
-
-      <style>{`
-        @keyframes spin {
-          from { transform: rotate(0deg); }
-          to { transform: rotate(360deg); }
-        }
-      `}</style>
     </div>
   );
 }
