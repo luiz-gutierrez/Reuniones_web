@@ -23,11 +23,11 @@ router.delete('/:id', eliminarTarea);
 router.put('/:id/estado', actualizarEstadoTarea);
 
 // Obtener tareas del usuario (solo Iniciar y Proceso)
-router.get('/usuario/:userId', verifyToken, checkRole('Gerente'),getTareasByUsuario);
+router.get('/usuario/:userId', verifyToken, checkRole('Gerente','JefeDepto'),getTareasByUsuario);
 // Actualizar solo el estado
-router.put('/:id/estado', verifyToken, checkRole('Gerente'),actualizarEstadoTarea);
+router.put('/:id/estado', verifyToken, checkRole('Gerente','JefeDepto'),actualizarEstadoTarea);
 // Obtener TODAS las tareas del usuario
-router.get('/usuario/:userId/todas', verifyToken, checkRole('Gerente'),getTareasByUsuarioAll);
+router.get('/usuario/:userId/todas', verifyToken, checkRole('Gerente','JefeDepto'),getTareasByUsuarioAll);
 
 
 

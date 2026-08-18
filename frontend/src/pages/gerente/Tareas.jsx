@@ -117,7 +117,7 @@ export default function GerenteTareas() {
     const colores = {
       'Iniciar': 'bg-orange-100 text-orange-800 border-orange-200',
       'Proceso': 'bg-blue-100 text-blue-800 border-blue-200',
-      'Revisión': 'bg-purple-100 text-purple-800 border-purple-200',
+      'Revision': 'bg-purple-100 text-purple-800 border-purple-200',
       'Finalizado': 'bg-green-100 text-green-800 border-green-200'
     };
     return colores[estatus] || 'bg-gray-100 text-gray-800';
@@ -128,7 +128,7 @@ export default function GerenteTareas() {
     const iconos = {
       'Iniciar': <FaRocket className="inline mr-1" />,
       'Proceso': <FaSync className="inline mr-1" />,
-      'Revisión': <FaPaperPlane className="inline mr-1" />,
+      'Revision': <FaPaperPlane className="inline mr-1" />,
       'Finalizado': <FaCheckCircle className="inline mr-1" />
     };
     return iconos[estatus] || <FaClipboardList className="inline mr-1" />;
@@ -184,7 +184,7 @@ export default function GerenteTareas() {
       case 'pendientes':
         return 'Mis Tareas Pendientes';
       case 'revision':
-        return 'Tareas en Revisión';
+        return 'Tareas en Revision';
       case 'finalizadas':
         return 'Tareas Finalizadas';
       case 'todas':
@@ -200,7 +200,7 @@ export default function GerenteTareas() {
       case 'pendientes':
         return 'Tareas que necesitan tu atención';
       case 'revision':
-        return 'Tareas enviadas para revisión';
+        return 'Tareas enviadas para Revision';
       case 'finalizadas':
         return 'Tareas completadas exitosamente';
       case 'todas':
@@ -281,7 +281,7 @@ export default function GerenteTareas() {
           <div className="flex items-center justify-between">
             <div>
               <p className="text-sm text-gray-500 font-medium flex items-center gap-1">
-                <FaPaperPlane className="text-purple-500" /> En Revisión
+                <FaPaperPlane className="text-purple-500" /> En Revision
               </p>
               <p className="text-3xl font-bold text-purple-600 mt-1">{contarPorEstatus('Revision')}</p>
             </div>
@@ -342,7 +342,7 @@ export default function GerenteTareas() {
             className="px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none bg-white"
           >
             <option value="pendientes">📌 Pendientes</option>
-            <option value="revision">📤 En Revisión</option>
+            <option value="revision">📤 En Revision</option>
             <option value="finalizadas">✅ Finalizadas</option>
             <option value="todas">📊 Todas</option>
           </select>
@@ -364,7 +364,7 @@ export default function GerenteTareas() {
           </div>
           <h3 className="text-xl font-semibold text-gray-700 mb-2">
             {filtroEstatus === 'pendientes' ? '¡No hay tareas pendientes!' : 
-             filtroEstatus === 'revision' ? 'No hay tareas en revisión' : 
+             filtroEstatus === 'revision' ? 'No hay tareas en Revision' : 
              filtroEstatus === 'finalizadas' ? 'No hay tareas finalizadas' : 
              'No hay tareas para mostrar'}
           </h3>
@@ -473,12 +473,12 @@ export default function GerenteTareas() {
                         >
                           <option value="Iniciar">🚀 Iniciar</option>
                           <option value="Proceso">🔄 Proceso</option>
-                          <option value="Revisión">📤 Revisión</option>
+                          <option value="Revision">📤 Revision</option>
                         </select>
                       ) : (
                         <span className="text-xs text-gray-400 italic flex items-center gap-1">
                           <FaCheckCircle className="text-green-400" />
-                          {tarea.tar_estatus === 'Revisión' ? 'En espera de aprobación' : 'Completada'}
+                          {tarea.tar_estatus === 'Revision' ? 'En espera de aprobación' : 'Completada'}
                         </span>
                       )}
                     </td>

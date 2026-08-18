@@ -252,7 +252,7 @@ async function actualizarEstadoTarea(req, res) {
   }
 
   // Validar que el estatus sea válido (solo Iniciar, Proceso, Revisión)
-  const estatusValidos = ['Iniciar', 'Proceso', 'Revisión'];
+  const estatusValidos = ['Iniciar', 'Proceso', 'Revision'];
   if (!estatusValidos.includes(tar_estatus)) {
     return res.status(400).json({
       success: false,

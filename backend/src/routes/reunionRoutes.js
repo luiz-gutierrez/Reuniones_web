@@ -21,12 +21,12 @@ router.get('/:id/invitados', verifyToken, checkRole('Secretaria'), getInvitados)
 //actualizar invitados de la reunion
 router.put('/:id/invitados', verifyToken, checkRole('Secretaria'), actualizarInvitados);
 //Obtener una reunión por ID
-router.get('/:id', verifyToken, checkRole( 'Admin', 'Secretaria','Gerente'), getReunionById);
+router.get('/:id', verifyToken, checkRole( 'Admin', 'Secretaria','Gerente','JefeDepto'), getReunionById);
 //Actualizar una reunión por ID
 router.put('/:id', verifyToken, checkRole('Secretaria'), actualizarReunion);
 
 // Obtener reuniones del usuario logueado
-router.get('/usuario/:userId', verifyToken, checkRole('Gerente'), getReunionesByUsuario);
+router.get('/usuario/:userId', verifyToken, checkRole('Gerente','JefeDepto'), getReunionesByUsuario);
 
 // Obtener detalles de una reunión específic
 

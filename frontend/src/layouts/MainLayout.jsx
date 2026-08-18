@@ -16,6 +16,11 @@ const MENUS = {
     { to: '/gerente/tareas', label: 'Tareas' },
     { to: '/gerente/reuniones', label: 'Reuniones' },
   ],
+  JefeDepto: [
+    { to: '/jefe_depto/inicio', label: 'Inicio' },
+    { to: '/jefe_depto/tareas', label: 'Tareas' },
+    { to: '/jefe_depto/reuniones', label: 'Reuniones' },
+  ],
   Usuario: [
     { to: '/usuario/inicio', label: 'Inicio' },
     { to: '/usuario/tareas', label: 'Tareas' }
