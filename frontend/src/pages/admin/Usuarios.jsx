@@ -22,13 +22,15 @@ import {
   FaUserTag,
   FaFilter,
   FaUserShield,
-  FaBuilding
+  FaBuilding,
+  FaUndo
 } from 'react-icons/fa';
 import { MdOutlineAdminPanelSettings } from 'react-icons/md';
 
 export default function AdminUsuarios() {
   const [usuarios, setUsuarios] = useState([]);
   const [puestos, setPuestos] = useState([]);
+  const [puestosDisponibles, setPuestosDisponibles] = useState([]);
   const [roles, setRoles] = useState([]);
   const [cargando, setCargando] = useState(true);
   const [error, setError] = useState('');
@@ -62,7 +64,9 @@ export default function AdminUsuarios() {
     setError('');
     try {
       const { data } = await api.get('/usuarios');
-      setUsuarios(data);
+      // ✅ FILTRO: Excluir usuarios con rol 'Admin'
+      const usuariosFiltrados = data.filter(u => u.rol !== 'Admin');
+      setUsuarios(usuariosFiltrados);
     } catch (err) {
       setError(err.response?.data?.message || 'Error al cargar usuarios');
     } finally {
@@ -83,8 +87,10 @@ export default function AdminUsuarios() {
   // Obtener todos los roles
   async function cargarRoles() {
     try {
-      const { data } = await api.get('usuarios/roles');
-      setRoles(data);
+      const { data } = await api.get('/usuarios/roles');
+      // ✅ FILTRO: Excluir el rol 'Admin' del selector
+      const rolesFiltrados = data.filter(r => r.rol_nombre !== 'Admin');
+      setRoles(rolesFiltrados);
     } catch (err) {
       console.error('Error al cargar roles:', err);
     }
@@ -93,7 +99,8 @@ export default function AdminUsuarios() {
   // Obtener puestos sin usuarios asignados
   async function cargarPuestosSinUsuarios() {
     try {
-      const { data } = await api.get('usuarios/puestos-sin-usuarios');
+      const { data } = await api.get('/usuarios/puestos-sin-usuarios');
+      setPuestosDisponibles(data);
       return data;
     } catch (err) {
       console.error('Error al cargar puestos sin usuarios:', err);
@@ -125,8 +132,7 @@ export default function AdminUsuarios() {
     setMostrarModal(true);
     
     // Cargar puestos sin usuarios para el selector
-    const puestosDisponibles = await cargarPuestosSinUsuarios();
-    setPuestos(puestosDisponibles);
+    await cargarPuestosSinUsuarios();
   };
 
   // Abrir modal para editar usuario
@@ -144,8 +150,7 @@ export default function AdminUsuarios() {
     setMostrarModal(true);
     
     // Cargar todos los puestos para edición (incluyendo el actual)
-    const { data } = await api.get('/puestos');
-    setPuestos(data);
+    await cargarPuestos();
   };
 
   // Cerrar modal
@@ -197,12 +202,12 @@ export default function AdminUsuarios() {
 
       let response;
       if (editando) {
-        response = await api.put(`/usuarios/${editando.id}`, usuarioData);
+        response = await editarUsuario(editando.id, usuarioData);
       } else {
         response = await api.post('/usuarios', usuarioData);
       }
 
-      console.log('✅ Usuario guardado:', response.data);
+      console.log('✅ Usuario guardado:', response);
       await cargarUsuarios();
       cerrarModal();
 
@@ -215,15 +220,66 @@ export default function AdminUsuarios() {
     }
   };
 
-  // Eliminar usuario
+  // Editar usuario
+  const editarUsuario = async (id, data) => {
+    try {
+      const response = await api.put(`/usuarios/${id}`, data);
+      return response.data;
+    } catch (error) {
+      console.error('Error al editar usuario:', error);
+      throw error;
+    }
+  };
+
+  // Eliminar usuario (desactivar)
+  const eliminarUsuario = async (id) => {
+    try {
+      const response = await api.delete(`/usuarios/${id}`);
+      return response.data;
+    } catch (error) {
+      console.error('Error al eliminar usuario:', error);
+      throw error;
+    }
+  };
+
+  // Reactivar usuario
+  const reactivarUsuario = async (id) => {
+    try {
+      const response = await api.put(`/usuarios/${id}/reactivar`);
+      return response.data;
+    } catch (error) {
+      console.error('Error al reactivar usuario:', error);
+      throw error;
+    }
+  };
+
+  // Manejar eliminación de usuario
   const handleEliminar = async (id) => {
     if (!confirm('¿Estás seguro de eliminar este usuario?')) return;
     
     try {
-      await api.delete(`/usuarios/${id}`);
+      await eliminarUsuario(id);
       await cargarUsuarios();
+      alert('✅ Usuario desactivado exitosamente');
     } catch (err) {
-      setError(err.response?.data?.message || 'Error al eliminar usuario');
+      const msg = err.response?.data?.message || 'Error al eliminar usuario';
+      setError(msg);
+      alert(`❌ ${msg}`);
+    }
+  };
+
+  // Manejar reactivación de usuario
+  const handleReactivar = async (id) => {
+    if (!confirm('¿Estás seguro de reactivar este usuario?')) return;
+    
+    try {
+      await reactivarUsuario(id);
+      await cargarUsuarios();
+      alert('✅ Usuario reactivado exitosamente');
+    } catch (err) {
+      const msg = err.response?.data?.message || 'Error al reactivar usuario';
+      setError(msg);
+      alert(`❌ ${msg}`);
     }
   };
 
@@ -231,10 +287,10 @@ export default function AdminUsuarios() {
   const usuariosFiltrados = usuarios.filter(u => {
     // Filtro por búsqueda
     const coincideBusqueda = 
-      u.nombre.toLowerCase().includes(busqueda.toLowerCase()) ||
-      u.apellido.toLowerCase().includes(busqueda.toLowerCase()) ||
-      u.correo.toLowerCase().includes(busqueda.toLowerCase()) ||
-      u.telefono.includes(busqueda);
+      u.nombre?.toLowerCase().includes(busqueda.toLowerCase()) ||
+      u.apellido?.toLowerCase().includes(busqueda.toLowerCase()) ||
+      u.correo?.toLowerCase().includes(busqueda.toLowerCase()) ||
+      u.telefono?.includes(busqueda);
     
     // Filtro por rol
     const coincideRol = filtroRol === '' || u.rol === filtroRol;
@@ -482,23 +538,36 @@ export default function AdminUsuarios() {
                         </span>
                       </td>
                       <td className="px-4 py-3 text-center">
-                        <div className="flex gap-2 justify-center">
-                          <button
-                            onClick={() => abrirModalEditar(u)}
-                            className="p-2 text-blue-600 hover:bg-blue-50 rounded-lg 
-                                     transition-all duration-200 hover:scale-110"
-                            title="Editar usuario"
-                          >
-                            <FaEdit className="text-sm" />
-                          </button>
-                          <button
-                            onClick={() => handleEliminar(u.id)}
-                            className="p-2 text-red-600 hover:bg-red-50 rounded-lg 
-                                     transition-all duration-200 hover:scale-110"
-                            title="Eliminar usuario"
-                          >
-                            <FaTrash className="text-sm" />
-                          </button>
+                        <div className="flex gap-1 justify-center flex-wrap">
+                          {u.activo ? (
+                            <>
+                              <button
+                                onClick={() => abrirModalEditar(u)}
+                                className="p-2 text-blue-600 hover:bg-blue-50 rounded-lg 
+                                         transition-all duration-200 hover:scale-110"
+                                title="Editar usuario"
+                              >
+                                <FaEdit className="text-sm" />
+                              </button>
+                              <button
+                                onClick={() => handleEliminar(u.id)}
+                                className="p-2 text-red-600 hover:bg-red-50 rounded-lg 
+                                         transition-all duration-200 hover:scale-110"
+                                title="Desactivar usuario"
+                              >
+                                <FaTrash className="text-sm" />
+                              </button>
+                            </>
+                          ) : (
+                            <button
+                              onClick={() => handleReactivar(u.id)}
+                              className="p-2 text-green-600 hover:bg-green-50 rounded-lg 
+                                       transition-all duration-200 hover:scale-110"
+                              title="Reactivar usuario"
+                            >
+                              <FaUndo className="text-sm" />
+                            </button>
+                          )}
                         </div>
                       </td>
                     </tr>
@@ -685,10 +754,10 @@ export default function AdminUsuarios() {
                            outline-none transition-all bg-white"
                 >
                   <option value="">Seleccione un puesto</option>
-                  {puestos.map((p) => (
+                  {(editando ? puestos : puestosDisponibles).map((p) => (
                     <option key={p.pue_id} value={p.pue_id}>
                       {p.pue_nombre} 
-                      {!editando && p.pue_usuario_asignado && ' (Asignado)'}
+                      {!editando && p.usuarios_asignados > 0 && ' (Asignado)'}
                       {editando && p.pue_id === formData.pue_id && ' (Actual)'}
                     </option>
                   ))}
