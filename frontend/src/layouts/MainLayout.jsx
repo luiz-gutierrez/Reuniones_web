@@ -14,6 +14,7 @@ const MENUS = {
   Gerente: [
     { to: '/gerente/inicio', label: 'Inicio' },
     { to: '/gerente/tareas', label: 'Tareas' },
+    { to: '/gerente/reuniones', label: 'Reuniones' },
   ],
   Usuario: [
     { to: '/usuario/inicio', label: 'Inicio' },

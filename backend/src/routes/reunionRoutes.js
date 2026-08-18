@@ -4,7 +4,8 @@ import { getReuniones,
          getInvitados,  
          actualizarInvitados,
          getReunionById,
-         actualizarReunion } from '../controllers/reunionController.js';
+         actualizarReunion,
+        getReunionesByUsuario } from '../controllers/reunionController.js';
 import verifyToken from '../middlewares/auth.js';
 import checkRole from '../middlewares/role.js';
 
@@ -20,10 +21,13 @@ router.get('/:id/invitados', verifyToken, checkRole('Secretaria'), getInvitados)
 //actualizar invitados de la reunion
 router.put('/:id/invitados', verifyToken, checkRole('Secretaria'), actualizarInvitados);
 //Obtener una reunión por ID
-router.get('/:id', verifyToken, checkRole( 'Admin', 'Secretaria'), getReunionById);
+router.get('/:id', verifyToken, checkRole( 'Admin', 'Secretaria','Gerente'), getReunionById);
 //Actualizar una reunión por ID
 router.put('/:id', verifyToken, checkRole('Secretaria'), actualizarReunion);
 
+// Obtener reuniones del usuario logueado
+router.get('/usuario/:userId', verifyToken, checkRole('Gerente'), getReunionesByUsuario);
 
+// Obtener detalles de una reunión específic
 
 export default router;

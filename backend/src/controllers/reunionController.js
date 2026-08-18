@@ -36,7 +36,6 @@ async function getReuniones(req, res) {
 }
 
 // POST /api/reuniones  (secretaria)
-// body: { nombre, descripcion, fecha, hora }
 // Crear reunión con invitados
 async function crearReunion(req, res) {
   const { nombre, descripcion, lugar, fecha, hora, invitados } = req.body;
@@ -402,6 +401,7 @@ async function getReunionById(req, res) {
     });
   }
 }
+
 // PUT /api/reuniones/:id - Actualizar reunión
 async function actualizarReunion(req, res) {
   const { id } = req.params;
@@ -444,12 +444,179 @@ async function actualizarReunion(req, res) {
   }
 }
 
+// GET /api/reuniones/usuario/:userId - Obtener reuniones donde el usuario es invitado
+async function getReunionesByUsuario(req, res) {
+  const { userId } = req.params;
+
+  try {
+    console.log(`🔍 Buscando reuniones para usuario: ${userId}`);
+
+    // Consulta SIN reu_estatus (por si no existe)
+    const [rows] = await pool.query(
+      `SELECT 
+        r.reu_id,
+        r.reu_nombre,
+        r.reu_descripcion,
+        r.reu_fecha,
+        r.reu_hora,
+        r.reu_lugar,
+        r.created_at,
+        u.nombre as creador_nombre,
+        u.apellido as creador_apellido,
+        u.correo as creador_correo,
+        a.asi_estatus as mi_asistencia,
+        (SELECT COUNT(*) FROM asistencias a2 WHERE a2.reu_id = r.reu_id) as total_invitados
+      FROM asistencias a
+      INNER JOIN reuniones r ON a.reu_id = r.reu_id
+      INNER JOIN users u ON r.use_id = u.id
+      WHERE a.use_id = ?
+      ORDER BY r.reu_fecha DESC, r.reu_hora DESC`,
+      [userId]
+    );
+
+    console.log(`✅ Encontradas ${rows.length} reuniones`);
+
+    // Si hay reuniones, obtener la lista de invitados
+    if (rows.length > 0) {
+      const reunionesIds = rows.map(r => r.reu_id);
+      
+      const [invitados] = await pool.query(
+        `SELECT 
+          a.reu_id,
+          a.use_id,
+          a.asi_estatus,
+          u.nombre,
+          u.apellido,
+          u.correo
+        FROM asistencias a
+        INNER JOIN users u ON a.use_id = u.id
+        WHERE a.reu_id IN (?)
+        ORDER BY u.nombre ASC`,
+        [reunionesIds]
+      );
+
+      // Agrupar invitados por reunión
+      const invitadosPorReunion = {};
+      invitados.forEach(inv => {
+        if (!invitadosPorReunion[inv.reu_id]) {
+          invitadosPorReunion[inv.reu_id] = [];
+        }
+        invitadosPorReunion[inv.reu_id].push({
+          use_id: inv.use_id,
+          nombre: inv.nombre,
+          apellido: inv.apellido,
+          correo: inv.correo,
+          asi_estatus: inv.asi_estatus
+        });
+      });
+
+      rows.forEach(reunion => {
+        reunion.invitados = invitadosPorReunion[reunion.reu_id] || [];
+      });
+    }
+
+    return res.json(rows);
+
+  } catch (error) {
+    console.error('❌ Error en getReunionesByUsuario:', error);
+    console.error('❌ SQL:', error.sql);
+    console.error('❌ SQL Message:', error.sqlMessage);
+    
+    return res.status(500).json({
+      message: 'Error al obtener reuniones del usuario',
+      error: error.message,
+      sqlMessage: error.sqlMessage || null
+    });
+  }
+}
+
+// GET /api/reuniones/:id - Obtener detalles de una reunión específica
+// async function getReunionById(req, res) {
+//   const { id } = req.params;
+
+//   try {
+//     const [rows] = await pool.query(
+//       `SELECT 
+//         r.reu_id,
+//         r.reu_nombre,
+//         r.reu_descripcion,
+//         r.reu_fecha,
+//         r.reu_hora_inicio,
+//         r.reu_hora_fin,
+//         r.reu_lugar,
+//         r.reu_tipo,
+//         r.reu_estatus,
+//         r.created_at,
+//         r.use_id as creador_id,
+//         u.nombre as creador_nombre,
+//         u.apellido as creador_apellido,
+//         u.correo as creador_correo
+//       FROM reuniones r
+//       INNER JOIN users u ON r.use_id = u.id
+//       WHERE r.reu_id = ?`,
+//       [id]
+//     );
+
+//     if (rows.length === 0) {
+//       return res.status(404).json({
+//         message: 'Reunión no encontrada'
+//       });
+//     }
+
+//     const reunion = rows[0];
+
+//     // Obtener invitados
+//     const [invitados] = await pool.query(
+//       `SELECT 
+//         u.id,
+//         u.nombre,
+//         u.apellido,
+//         u.correo,
+//         u.telefono,
+//         ri.rol,
+//         ri.confirmacion
+//       FROM reunion_invitados ri
+//       INNER JOIN users u ON ri.use_id = u.id
+//       WHERE ri.reu_id = ?`,
+//       [id]
+//     );
+//     reunion.invitados = invitados;
+
+//     // Obtener tareas de la reunión
+//     const [tareas] = await pool.query(
+//       `SELECT 
+//         t.tar_id,
+//         t.tar_nombre,
+//         t.tar_descripcion,
+//         t.tar_fecha,
+//         t.tar_estatus,
+//         t.tar_prioridad,
+//         t.use_id as asignado_a,
+//         u.nombre as asignado_nombre,
+//         u.apellido as asignado_apellido
+//       FROM tareas t
+//       LEFT JOIN users u ON t.use_id = u.id
+//       WHERE t.reu_id = ?`,
+//       [id]
+//     );
+//     reunion.tareas = tareas;
+
+//     return res.json(reunion);
+//   } catch (error) {
+//     console.error('❌ Error al obtener reunión:', error);
+//     return res.status(500).json({
+//       message: 'Error al obtener la reunión',
+//       error: error.message
+//     });
+//   }
+// }
+
 export { 
   getReuniones, 
   crearReunion,
   getInvitados,
   actualizarInvitados,
   getReunionById,
-  actualizarReunion
-
+  actualizarReunion,
+getReunionesByUsuario
 };

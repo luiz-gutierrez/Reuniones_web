@@ -16,6 +16,9 @@ import AsistenteMinutas from './pages/asistente/Minutas';
 
 import GerenteInicio from './pages/gerente/Inicio';
 import GerenteTareas from './pages/gerente/Tareas';
+import Reuniones from './pages/gerente/Reuniones';
+import ReunionDetalle from './pages/gerente/ReunionDetalle';
+
 
 import JefeDeptoInicio from './pages/jefe_depto/Inicio';
 
@@ -46,14 +49,15 @@ export default function App() {
             <Route path="/asistente/reunion-detalle/:id" element={<AsistenteReunionDetalle />} />
             <Route path="/asistente/minutas/:id" element={<AsistenteMinutas />} />
           </Route>
-        </Route>  
+        </Route>
 
         {/* Rutas del gerente */}
         <Route element={<PrivateRoute allowedRoles={['Gerente']} />}>
           <Route element={<MainLayout />}>
             <Route path="/gerente/inicio" element={<GerenteInicio />} />
-            <Route path="/gerente/tareas" element={<GerenteTareas />}/>
-          </Route>
+            <Route path="/gerente/tareas" element={<GerenteTareas />} />
+            <Route path="/gerente/reuniones" element={<Reuniones />} />
+            <Route path="/gerente/reunion/:id" element={<ReunionDetalle />} />          </Route>
         </Route>
 
         {/* Rutas del jefe de departamento */}
