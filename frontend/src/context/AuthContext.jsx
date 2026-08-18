@@ -54,33 +54,36 @@ export function AuthProvider({ children }) {
   }, []);
 
   // Iniciar sesión
-  async function login(telefono, contrasena) {
-    try {
-      const { data } = await api.post('/auth/login', {
-        telefono,
-        contrasena
-      });
+const login = async (telefono, contrasena) => {
+  try {
+    const response = await api.post('/auth/login', {
+      telefono,
+      contrasena
+    });
 
-      // Guardar token
-      localStorage.setItem('token', data.token);
+    const { token, user } = response.data;
 
-      // Guardar usuario
-      localStorage.setItem(
-        'user',
-        JSON.stringify(data.user)
-      );
+    localStorage.setItem('token', token);
+    api.defaults.headers.common['Authorization'] = `Bearer ${token}`;
 
-      // Actualizar estado
-      setUser(data.user);
+    setUser(user);
+    return user;
 
-      return data.user;
-
-    } catch (error) {
-      console.error('Error al iniciar sesión:', error);
-
-      throw error;
+  } catch (error) {
+    console.error('Error en login:', error);
+    
+    // ✅ Manejar error específico de usuario desactivado
+    if (error.response?.status === 403) {
+      throw new Error('Tu cuenta ha sido desactivada. Contacta al administrador.');
     }
+    
+    if (error.response?.status === 401) {
+      throw new Error('Teléfono o contraseña incorrectos');
+    }
+    
+    throw new Error('Error al iniciar sesión');
   }
+};
 
   // Cerrar sesión
   function logout() {
