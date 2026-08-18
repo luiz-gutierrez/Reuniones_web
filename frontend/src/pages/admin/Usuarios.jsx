@@ -10,19 +10,26 @@ import {
   FaSpinner,
   FaSearch,
   FaTimes,
-  FaUserCircle
+  FaUserCircle,
+  FaUsers,
+  FaPhone,
+  FaEnvelope,
+  FaBriefcase,
+  FaUserCheck,
+  FaUserSlash,
+  FaIdCard,
+  FaKey,
+  FaUserTag,
+  FaFilter,
+  FaUserShield,
+  FaBuilding
 } from 'react-icons/fa';
-
-// Paleta de colores (solo 3 colores)
-const COLORS = {
-  primary: '#2563EB',
-  secondary: '#1E293B',
-  accent: '#F8FAFC',
-};
+import { MdOutlineAdminPanelSettings } from 'react-icons/md';
 
 export default function AdminUsuarios() {
   const [usuarios, setUsuarios] = useState([]);
   const [puestos, setPuestos] = useState([]);
+  const [roles, setRoles] = useState([]);
   const [cargando, setCargando] = useState(true);
   const [error, setError] = useState('');
   
@@ -31,6 +38,7 @@ export default function AdminUsuarios() {
   const [guardando, setGuardando] = useState(false);
   const [editando, setEditando] = useState(null);
   const [busqueda, setBusqueda] = useState('');
+  const [filtroRol, setFiltroRol] = useState('');
   
   const [formData, setFormData] = useState({
     nombre: '',
@@ -41,10 +49,11 @@ export default function AdminUsuarios() {
     pue_id: ''
   });
 
-  // Cargar usuarios y puestos al inicio
+  // Cargar usuarios, puestos y roles al inicio
   useEffect(() => {
     cargarUsuarios();
     cargarPuestos();
+    cargarRoles();
   }, []);
 
   // Obtener todos los usuarios
@@ -71,6 +80,27 @@ export default function AdminUsuarios() {
     }
   }
 
+  // Obtener todos los roles
+  async function cargarRoles() {
+    try {
+      const { data } = await api.get('usuarios/roles');
+      setRoles(data);
+    } catch (err) {
+      console.error('Error al cargar roles:', err);
+    }
+  }
+
+  // Obtener puestos sin usuarios asignados
+  async function cargarPuestosSinUsuarios() {
+    try {
+      const { data } = await api.get('usuarios/puestos-sin-usuarios');
+      return data;
+    } catch (err) {
+      console.error('Error al cargar puestos sin usuarios:', err);
+      return [];
+    }
+  }
+
   // Manejar cambios en el formulario
   const handleChange = (e) => {
     const { name, value } = e.target;
@@ -81,7 +111,7 @@ export default function AdminUsuarios() {
   };
 
   // Abrir modal para crear usuario
-  const abrirModalCrear = () => {
+  const abrirModalCrear = async () => {
     setEditando(null);
     setFormData({
       nombre: '',
@@ -93,10 +123,14 @@ export default function AdminUsuarios() {
     });
     setError('');
     setMostrarModal(true);
+    
+    // Cargar puestos sin usuarios para el selector
+    const puestosDisponibles = await cargarPuestosSinUsuarios();
+    setPuestos(puestosDisponibles);
   };
 
   // Abrir modal para editar usuario
-  const abrirModalEditar = (usuario) => {
+  const abrirModalEditar = async (usuario) => {
     setEditando(usuario);
     setFormData({
       nombre: usuario.nombre,
@@ -108,6 +142,10 @@ export default function AdminUsuarios() {
     });
     setError('');
     setMostrarModal(true);
+    
+    // Cargar todos los puestos para edición (incluyendo el actual)
+    const { data } = await api.get('/puestos');
+    setPuestos(data);
   };
 
   // Cerrar modal
@@ -123,58 +161,59 @@ export default function AdminUsuarios() {
       pue_id: ''
     });
     setError('');
+    // Recargar puestos completos al cerrar
+    cargarPuestos();
   };
 
   // Crear o actualizar usuario
-  // En tu componente AdminUsuarios.jsx, la parte del formulario
-const handleSubmit = async (e) => {
-  e.preventDefault();
-  setGuardando(true);
-  setError('');
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    setGuardando(true);
+    setError('');
 
-  try {
-    const { nombre, apellido, telefono, correo, contrasena, pue_id } = formData;
+    try {
+      const { nombre, apellido, telefono, correo, contrasena, pue_id } = formData;
 
-    // Validaciones
-    if (!nombre || !apellido || !telefono || !correo || !pue_id) {
-      throw new Error('Todos los campos son obligatorios');
+      // Validaciones
+      if (!nombre || !apellido || !telefono || !correo || !pue_id) {
+        throw new Error('Todos los campos son obligatorios');
+      }
+
+      if (!editando && !contrasena) {
+        throw new Error('La contraseña es obligatoria para nuevos usuarios');
+      }
+
+      const usuarioData = {
+        nombre,
+        apellido,
+        telefono,
+        correo,
+        pue_id: parseInt(pue_id)
+      };
+
+      if (!editando) {
+        usuarioData.contrasena = contrasena;
+      }
+
+      let response;
+      if (editando) {
+        response = await api.put(`/usuarios/${editando.id}`, usuarioData);
+      } else {
+        response = await api.post('/usuarios', usuarioData);
+      }
+
+      console.log('✅ Usuario guardado:', response.data);
+      await cargarUsuarios();
+      cerrarModal();
+
+    } catch (err) {
+      const msg = err.response?.data?.message || err.message || 'Error al guardar usuario';
+      setError(msg);
+      console.error('❌ Error:', err);
+    } finally {
+      setGuardando(false);
     }
-
-    if (!editando && !contrasena) {
-      throw new Error('La contrasena es obligatoria para nuevos usuarios');
-    }
-
-    const usuarioData = {
-      nombre,
-      apellido,
-      telefono,
-      correo,
-      pue_id: parseInt(pue_id)
-    };
-
-    if (!editando) {
-      usuarioData.contrasena = contrasena;
-    }
-
-    let response;
-    if (editando) {
-      response = await api.put(`/usuarios/${editando.id}`, usuarioData);
-    } else {
-      response = await api.post('/usuarios', usuarioData);
-    }
-
-    console.log('✅ Usuario guardado:', response.data);
-    await cargarUsuarios();
-    cerrarModal();
-
-  } catch (err) {
-    const msg = err.response?.data?.message || err.message || 'Error al guardar usuario';
-    setError(msg);
-    console.error('❌ Error:', err);
-  } finally {
-    setGuardando(false);
-  }
-};
+  };
 
   // Eliminar usuario
   const handleEliminar = async (id) => {
@@ -188,166 +227,180 @@ const handleSubmit = async (e) => {
     }
   };
 
-  // Filtrar usuarios
-  const usuariosFiltrados = usuarios.filter(u => 
-    u.nombre.toLowerCase().includes(busqueda.toLowerCase()) ||
-    u.apellido.toLowerCase().includes(busqueda.toLowerCase()) ||
-    u.correo.toLowerCase().includes(busqueda.toLowerCase()) ||
-    u.telefono.includes(busqueda)
-  );
+  // Filtrar usuarios por búsqueda y rol
+  const usuariosFiltrados = usuarios.filter(u => {
+    // Filtro por búsqueda
+    const coincideBusqueda = 
+      u.nombre.toLowerCase().includes(busqueda.toLowerCase()) ||
+      u.apellido.toLowerCase().includes(busqueda.toLowerCase()) ||
+      u.correo.toLowerCase().includes(busqueda.toLowerCase()) ||
+      u.telefono.includes(busqueda);
+    
+    // Filtro por rol
+    const coincideRol = filtroRol === '' || u.rol === filtroRol;
+    
+    return coincideBusqueda && coincideRol;
+  });
+
+  // Obtener colores para roles
+  const getRolColor = (rol) => {
+    const colores = {
+      'Administrador': 'bg-purple-100 text-purple-700 border-purple-200',
+      'Gerente': 'bg-blue-100 text-blue-700 border-blue-200',
+      'Empleado': 'bg-green-100 text-green-700 border-green-200'
+    };
+    return colores[rol] || 'bg-gray-100 text-gray-700 border-gray-200';
+  };
+
+  // Obtener icono para roles
+  const getRolIcon = (rol) => {
+    const iconos = {
+      'Administrador': <FaUserShield className="text-xs" />,
+      'Gerente': <MdOutlineAdminPanelSettings className="text-xs" />,
+      'Empleado': <FaUserCheck className="text-xs" />
+    };
+    return iconos[rol] || <FaUserCircle className="text-xs" />;
+  };
 
   return (
-    <div style={{ padding: '1.5rem', maxWidth: '1280px', margin: '0 auto' }}>
+    <div className="p-6 max-w-7xl mx-auto">
       {/* Header */}
-      <div style={{
-        display: 'flex',
-        justifyContent: 'space-between',
-        alignItems: 'center',
-        flexWrap: 'wrap',
-        gap: '1rem',
-        marginBottom: '1.5rem'
-      }}>
+      <div className="flex flex-wrap justify-between items-center gap-4 mb-6">
         <div>
-          <h1 style={{ fontSize: '1.875rem', fontWeight: 'bold', color: COLORS.secondary, margin: 0 }}>
-            👥 Usuarios
+          <h1 className="text-3xl font-bold text-gray-800 flex items-center gap-3">
+            <FaUsers className="text-blue-600" />
+            Usuarios
           </h1>
-          <p style={{ color: COLORS.secondary, opacity: 0.6, margin: '0.25rem 0 0 0' }}>
+          <p className="text-gray-500 mt-1">
             Gestiona los usuarios del sistema
           </p>
         </div>
         <button
           onClick={abrirModalCrear}
-          style={{
-            backgroundColor: COLORS.primary,
-            color: 'white',
-            border: 'none',
-            borderRadius: '0.75rem',
-            padding: '0.75rem 1.5rem',
-            cursor: 'pointer',
-            display: 'flex',
-            alignItems: 'center',
-            gap: '0.5rem',
-            fontWeight: 500,
-            transition: 'all 0.2s',
-            boxShadow: '0 4px 6px -1px rgba(37,99,235,0.3)'
-          }}
-          onMouseEnter={(e) => {
-            e.currentTarget.style.transform = 'scale(1.02)';
-            e.currentTarget.style.boxShadow = '0 10px 15px -3px rgba(37,99,235,0.4)';
-          }}
-          onMouseLeave={(e) => {
-            e.currentTarget.style.transform = 'scale(1)';
-            e.currentTarget.style.boxShadow = '0 4px 6px -1px rgba(37,99,235,0.3)';
-          }}
+          className="bg-blue-600 hover:bg-blue-700 text-white px-6 py-3 rounded-xl 
+                   flex items-center gap-2 font-medium transition-all duration-200 
+                   shadow-lg shadow-blue-600/30 hover:shadow-blue-600/40 
+                   hover:scale-105 active:scale-95"
         >
-          <FaUserPlus /> Nuevo Usuario
+          <FaUserPlus className="text-lg" />
+          Nuevo Usuario
         </button>
       </div>
 
-      {/* Buscador */}
-      <div style={{
-        backgroundColor: 'white',
-        borderRadius: '0.75rem',
-        padding: '1rem',
-        boxShadow: '0 1px 3px rgba(0,0,0,0.1)',
-        marginBottom: '1.5rem',
-        display: 'flex',
-        alignItems: 'center',
-        gap: '0.75rem'
-      }}>
-        <FaSearch style={{ color: COLORS.secondary, opacity: 0.4 }} />
-        <input
-          type="text"
-          placeholder="Buscar usuarios por nombre, correo o teléfono..."
-          value={busqueda}
-          onChange={(e) => setBusqueda(e.target.value)}
-          style={{
-            flex: 1,
-            border: 'none',
-            outline: 'none',
-            fontSize: '0.875rem',
-            color: COLORS.secondary,
-            background: 'transparent'
-          }}
-        />
-        {busqueda && (
-          <button
-            onClick={() => setBusqueda('')}
-            style={{
-              background: 'none',
-              border: 'none',
-              color: COLORS.secondary,
-              opacity: 0.4,
-              cursor: 'pointer'
-            }}
-          >
-            <FaTimes />
-          </button>
-        )}
+      {/* Filtros y Buscador */}
+      <div className="bg-white rounded-xl shadow-sm p-4 mb-6 border border-gray-100">
+        <div className="flex flex-wrap gap-4 items-center">
+          {/* Buscador */}
+          <div className="flex-1 min-w-[200px] flex items-center gap-3">
+            <FaSearch className="text-gray-400 text-lg" />
+            <input
+              type="text"
+              placeholder="Buscar usuarios..."
+              value={busqueda}
+              onChange={(e) => setBusqueda(e.target.value)}
+              className="flex-1 border-none outline-none text-gray-700 bg-transparent 
+                         placeholder-gray-400 min-w-[150px]"
+            />
+            {busqueda && (
+              <button
+                onClick={() => setBusqueda('')}
+                className="text-gray-400 hover:text-gray-600 transition-colors"
+              >
+                <FaTimes />
+              </button>
+            )}
+          </div>
+
+          {/* Separador */}
+          <div className="w-px h-8 bg-gray-200 hidden sm:block"></div>
+
+          {/* Filtro por Rol */}
+          <div className="flex items-center gap-3">
+            <FaFilter className="text-gray-400" />
+            <select
+              value={filtroRol}
+              onChange={(e) => setFiltroRol(e.target.value)}
+              className="px-3 py-2 border border-gray-200 rounded-lg text-sm 
+                       focus:ring-2 focus:ring-blue-500 focus:border-blue-500 
+                       outline-none transition-all bg-white min-w-[150px]"
+            >
+              <option value="">Todos los roles</option>
+              {roles.map((rol) => (
+                <option key={rol.rol_id} value={rol.rol_nombre}>
+                  {rol.rol_nombre}
+                </option>
+              ))}
+            </select>
+          </div>
+
+          {/* Contador de resultados */}
+          <span className="text-sm text-gray-500 ml-auto flex items-center gap-2">
+            <FaUsers className="text-blue-400" />
+            {usuariosFiltrados.length} de {usuarios.length} usuarios
+          </span>
+        </div>
       </div>
 
       {/* Mensajes de carga y error */}
       {cargando && (
-        <div style={{
-          textAlign: 'center',
-          padding: '3rem',
-          color: COLORS.secondary,
-          opacity: 0.6
-        }}>
-          <FaSpinner style={{ fontSize: '2rem', animation: 'spin 1s linear infinite' }} />
-          <p style={{ marginTop: '0.5rem' }}>Cargando usuarios...</p>
+        <div className="text-center py-12">
+          <FaSpinner className="text-4xl text-blue-600 animate-spin mx-auto" />
+          <p className="text-gray-500 mt-3">Cargando usuarios...</p>
         </div>
       )}
 
       {error && (
-        <div style={{
-          backgroundColor: '#FEE2E2',
-          border: '1px solid #FCA5A5',
-          color: '#991B1B',
-          padding: '1rem',
-          borderRadius: '0.75rem',
-          marginBottom: '1.5rem',
-          display: 'flex',
-          alignItems: 'center',
-          gap: '0.75rem'
-        }}>
-          <FaTimes style={{ color: '#DC2626' }} />
+        <div className="bg-red-50 border border-red-200 text-red-700 p-4 rounded-xl 
+                        flex items-center gap-3 mb-6">
+          <FaTimes className="text-red-500 text-lg" />
           <span>{error}</span>
         </div>
       )}
 
       {/* Tabla de usuarios */}
       {!cargando && !error && (
-        <div style={{
-          backgroundColor: 'white',
-          borderRadius: '1rem',
-          overflow: 'hidden',
-          boxShadow: '0 4px 6px -1px rgba(0,0,0,0.1)'
-        }}>
-          <div style={{ overflowX: 'auto' }}>
-            <table style={{
-              width: '100%',
-              borderCollapse: 'collapse',
-              minWidth: '700px'
-            }}>
-              <thead style={{ backgroundColor: COLORS.accent }}>
+        <div className="bg-white rounded-2xl shadow-sm overflow-hidden border border-gray-100">
+          <div className="overflow-x-auto">
+            <table className="w-full min-w-[800px]">
+              <thead className="bg-gray-50 border-b border-gray-200">
                 <tr>
-                  <th style={{ padding: '0.75rem 1rem', textAlign: 'left', fontSize: '0.75rem', fontWeight: 600, color: COLORS.secondary, opacity: 0.7, textTransform: 'uppercase' }}>
-                    Usuario
+                  <th className="px-4 py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">
+                    <div className="flex items-center gap-2">
+                      <FaUserCircle className="text-gray-400" />
+                      Usuario
+                    </div>
                   </th>
-                  <th style={{ padding: '0.75rem 1rem', textAlign: 'left', fontSize: '0.75rem', fontWeight: 600, color: COLORS.secondary, opacity: 0.7, textTransform: 'uppercase' }}>
-                    Teléfono
+                  <th className="px-4 py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">
+                    <div className="flex items-center gap-2">
+                      <FaPhone className="text-gray-400" />
+                      Teléfono
+                    </div>
                   </th>
-                  <th style={{ padding: '0.75rem 1rem', textAlign: 'left', fontSize: '0.75rem', fontWeight: 600, color: COLORS.secondary, opacity: 0.7, textTransform: 'uppercase' }}>
-                    Correo
+                  <th className="px-4 py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">
+                    <div className="flex items-center gap-2">
+                      <FaEnvelope className="text-gray-400" />
+                      Correo
+                    </div>
                   </th>
-                  <th style={{ padding: '0.75rem 1rem', textAlign: 'left', fontSize: '0.75rem', fontWeight: 600, color: COLORS.secondary, opacity: 0.7, textTransform: 'uppercase' }}>
-                    Puesto
+                  <th className="px-4 py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">
+                    <div className="flex items-center gap-2">
+                      <FaBriefcase className="text-gray-400" />
+                      Puesto
+                    </div>
                   </th>
-                  <th style={{ padding: '0.75rem 1rem', textAlign: 'left', fontSize: '0.75rem', fontWeight: 600, color: COLORS.secondary, opacity: 0.7, textTransform: 'uppercase' }}>
-                    Estado
+                  <th className="px-4 py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">
+                    <div className="flex items-center gap-2">
+                      <FaUserShield className="text-gray-400" />
+                      Rol
+                    </div>
                   </th>
-                  <th style={{ padding: '0.75rem 1rem', textAlign: 'center', fontSize: '0.75rem', fontWeight: 600, color: COLORS.secondary, opacity: 0.7, textTransform: 'uppercase' }}>
+                  <th className="px-4 py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">
+                    <div className="flex items-center gap-2">
+                      <MdOutlineAdminPanelSettings className="text-gray-400" />
+                      Estado
+                    </div>
+                  </th>
+                  <th className="px-4 py-3 text-center text-xs font-semibold text-gray-600 uppercase tracking-wider">
                     Acciones
                   </th>
                 </tr>
@@ -355,95 +408,96 @@ const handleSubmit = async (e) => {
               <tbody>
                 {usuariosFiltrados.length === 0 ? (
                   <tr>
-                    <td colSpan="6" style={{ padding: '3rem', textAlign: 'center', color: COLORS.secondary, opacity: 0.4 }}>
-                      <FaUserCircle style={{ fontSize: '3rem', margin: '0 auto 0.5rem', display: 'block' }} />
-                      <p>No hay usuarios registrados</p>
-                      <p style={{ fontSize: '0.875rem' }}>Haz clic en "Nuevo Usuario" para crear uno</p>
+                    <td colSpan="7" className="py-12 text-center text-gray-400">
+                      <FaUserCircle className="text-5xl mx-auto mb-3 text-gray-300" />
+                      <p className="text-lg font-medium">No hay usuarios registrados</p>
+                      <p className="text-sm">
+                        {filtroRol ? `No hay usuarios con el rol "${filtroRol}"` : 'Haz clic en "Nuevo Usuario" para crear uno'}
+                      </p>
                     </td>
                   </tr>
                 ) : (
                   usuariosFiltrados.map((u) => (
                     <tr 
                       key={u.id} 
-                      style={{ borderTop: '1px solid #E5E7EB' }}
-                      onMouseEnter={(e) => e.currentTarget.style.backgroundColor = COLORS.accent}
-                      onMouseLeave={(e) => e.currentTarget.style.backgroundColor = 'white'}
+                      className="border-t border-gray-100 hover:bg-gray-50 transition-colors"
                     >
-                      <td style={{ padding: '0.75rem 1rem' }}>
+                      <td className="px-4 py-3">
                         <div>
-                          <div style={{ fontWeight: 500, color: COLORS.secondary }}>
+                          <div className="font-medium text-gray-800 flex items-center gap-2">
+                            <FaUserCircle className="text-blue-500" />
                             {u.nombre} {u.apellido}
                           </div>
-                          <div style={{ fontSize: '0.75rem', color: COLORS.secondary, opacity: 0.5 }}>
+                          <div className="text-xs text-gray-400 flex items-center gap-1">
+                            <FaIdCard className="text-xs" />
                             ID: {u.id}
                           </div>
                         </div>
                       </td>
-                      <td style={{ padding: '0.75rem 1rem', color: COLORS.secondary, fontSize: '0.875rem' }}>
-                        {u.telefono}
+                      <td className="px-4 py-3 text-gray-600 text-sm">
+                        <div className="flex items-center gap-2">
+                          <FaPhone className="text-gray-400 text-xs" />
+                          {u.telefono}
+                        </div>
                       </td>
-                      <td style={{ padding: '0.75rem 1rem', color: COLORS.secondary, fontSize: '0.875rem' }}>
-                        {u.correo}
+                      <td className="px-4 py-3 text-gray-600 text-sm">
+                        <div className="flex items-center gap-2">
+                          <FaEnvelope className="text-gray-400 text-xs" />
+                          {u.correo}
+                        </div>
                       </td>
-                      <td style={{ padding: '0.75rem 1rem' }}>
-                        <span style={{
-                          backgroundColor: '#DBEAFE',
-                          color: '#1E40AF',
-                          padding: '0.25rem 0.75rem',
-                          borderRadius: '9999px',
-                          fontSize: '0.75rem',
-                          fontWeight: 500
-                        }}>
+                      <td className="px-4 py-3">
+                        <span className="bg-indigo-50 text-indigo-700 px-3 py-1 rounded-full 
+                                         text-xs font-medium inline-flex items-center gap-1">
+                          <FaBuilding className="text-xs" />
                           {u.puesto || 'Sin puesto'}
                         </span>
                       </td>
-                      <td style={{ padding: '0.75rem 1rem' }}>
-                        <span style={{
-                          backgroundColor: u.activo ? '#D1FAE5' : '#FEE2E2',
-                          color: u.activo ? '#065F46' : '#991B1B',
-                          padding: '0.25rem 0.75rem',
-                          borderRadius: '9999px',
-                          fontSize: '0.75rem',
-                          fontWeight: 500
-                        }}>
-                          {u.activo ? 'Activo' : 'Inactivo'}
+                      <td className="px-4 py-3">
+                        <span className={`px-3 py-1 rounded-full text-xs font-medium 
+                                          inline-flex items-center gap-1 border
+                                          ${getRolColor(u.rol)}`}>
+                          {getRolIcon(u.rol)}
+                          {u.rol || 'Sin rol'}
                         </span>
                       </td>
-                      <td style={{ padding: '0.75rem 1rem', textAlign: 'center' }}>
-                        <div style={{ display: 'flex', gap: '0.5rem', justifyContent: 'center' }}>
+                      <td className="px-4 py-3">
+                        <span className={`px-3 py-1 rounded-full text-xs font-medium 
+                                          inline-flex items-center gap-1 ${
+                          u.activo 
+                            ? 'bg-green-50 text-green-700' 
+                            : 'bg-red-50 text-red-700'
+                        }`}>
+                          {u.activo ? (
+                            <>
+                              <FaUserCheck className="text-xs" />
+                              Activo
+                            </>
+                          ) : (
+                            <>
+                              <FaUserSlash className="text-xs" />
+                              Inactivo
+                            </>
+                          )}
+                        </span>
+                      </td>
+                      <td className="px-4 py-3 text-center">
+                        <div className="flex gap-2 justify-center">
                           <button
                             onClick={() => abrirModalEditar(u)}
-                            style={{
-                              background: 'none',
-                              border: 'none',
-                              color: COLORS.primary,
-                              cursor: 'pointer',
-                              padding: '0.25rem 0.5rem',
-                              borderRadius: '0.25rem',
-                              transition: 'all 0.2s'
-                            }}
-                            onMouseEnter={(e) => e.currentTarget.style.backgroundColor = '#DBEAFE'}
-                            onMouseLeave={(e) => e.currentTarget.style.backgroundColor = 'transparent'}
+                            className="p-2 text-blue-600 hover:bg-blue-50 rounded-lg 
+                                     transition-all duration-200 hover:scale-110"
                             title="Editar usuario"
                           >
-                            <FaEdit size={16} />
+                            <FaEdit className="text-sm" />
                           </button>
                           <button
                             onClick={() => handleEliminar(u.id)}
-                            style={{
-                              background: 'none',
-                              border: 'none',
-                              color: '#EF4444',
-                              cursor: 'pointer',
-                              padding: '0.25rem 0.5rem',
-                              borderRadius: '0.25rem',
-                              transition: 'all 0.2s'
-                            }}
-                            onMouseEnter={(e) => e.currentTarget.style.backgroundColor = '#FEE2E2'}
-                            onMouseLeave={(e) => e.currentTarget.style.backgroundColor = 'transparent'}
+                            className="p-2 text-red-600 hover:bg-red-50 rounded-lg 
+                                     transition-all duration-200 hover:scale-110"
                             title="Eliminar usuario"
                           >
-                            <FaTrash size={16} />
+                            <FaTrash className="text-sm" />
                           </button>
                         </div>
                       </td>
@@ -453,60 +507,68 @@ const handleSubmit = async (e) => {
               </tbody>
             </table>
           </div>
+          
+          {/* Pie de tabla */}
+          {usuariosFiltrados.length > 0 && (
+            <div className="bg-gray-50 px-6 py-3 border-t border-gray-200 flex justify-between items-center flex-wrap gap-2">
+              <span className="text-sm text-gray-500 flex items-center gap-2">
+                <FaUsers className="text-blue-400" />
+                Mostrando {usuariosFiltrados.length} de {usuarios.length} usuarios
+              </span>
+              {filtroRol && (
+                <span className="text-sm text-gray-500 flex items-center gap-2">
+                  <FaFilter className="text-blue-400" />
+                  Filtrado por: <strong>{filtroRol}</strong>
+                  <button
+                    onClick={() => setFiltroRol('')}
+                    className="text-blue-600 hover:text-blue-800 hover:underline ml-1"
+                  >
+                    (Limpiar filtro)
+                  </button>
+                </span>
+              )}
+            </div>
+          )}
         </div>
       )}
 
       {/* Modal para crear/editar usuario */}
       {mostrarModal && (
-        <div style={{
-          position: 'fixed',
-          inset: 0,
-          backgroundColor: 'rgba(0,0,0,0.5)',
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'center',
-          zIndex: 50,
-          padding: '1rem'
-        }}
-        onClick={cerrarModal}>
-          <div style={{
-            backgroundColor: 'white',
-            borderRadius: '1rem',
-            padding: '2rem',
-            maxWidth: '500px',
-            width: '100%',
-            maxHeight: '90vh',
-            overflowY: 'auto'
-          }}
-          onClick={(e) => e.stopPropagation()}>
-            <div style={{
-              display: 'flex',
-              justifyContent: 'space-between',
-              alignItems: 'center',
-              marginBottom: '1.5rem'
-            }}>
-              <h2 style={{ fontSize: '1.5rem', fontWeight: 'bold', color: COLORS.secondary, margin: 0 }}>
-                {editando ? '✏️ Editar Usuario' : '👤 Nuevo Usuario'}
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4"
+             onClick={cerrarModal}>
+          <div className="bg-white rounded-2xl p-8 max-w-md w-full max-h-[90vh] overflow-y-auto
+                          shadow-2xl transform transition-all"
+                 onClick={(e) => e.stopPropagation()}>
+            <div className="flex justify-between items-center mb-6">
+              <h2 className="text-2xl font-bold text-gray-800 flex items-center gap-3">
+                {editando ? (
+                  <>
+                    <FaEdit className="text-blue-600" />
+                    Editar Usuario
+                  </>
+                ) : (
+                  <>
+                    <FaUserPlus className="text-blue-600" />
+                    Nuevo Usuario
+                  </>
+                )}
               </h2>
               <button
                 onClick={cerrarModal}
-                style={{
-                  background: 'none',
-                  border: 'none',
-                  fontSize: '1.5rem',
-                  color: COLORS.secondary,
-                  opacity: 0.4,
-                  cursor: 'pointer'
-                }}
+                className="text-gray-400 hover:text-gray-600 transition-colors 
+                           hover:bg-gray-100 p-2 rounded-lg"
               >
-                <FaTimes />
+                <FaTimes className="text-xl" />
               </button>
             </div>
 
-            <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
+            <form onSubmit={handleSubmit} className="space-y-4">
               <div>
-                <label style={{ display: 'block', fontSize: '0.875rem', fontWeight: 500, color: COLORS.secondary, marginBottom: '0.25rem' }}>
-                  Nombre *
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  <div className="flex items-center gap-2">
+                    <FaUserCircle className="text-blue-500" />
+                    Nombre *
+                  </div>
                 </label>
                 <input
                   type="text"
@@ -515,30 +577,18 @@ const handleSubmit = async (e) => {
                   onChange={handleChange}
                   required
                   placeholder="Ingrese el nombre"
-                  style={{
-                    width: '100%',
-                    padding: '0.75rem',
-                    border: `1px solid ${COLORS.accent}`,
-                    borderRadius: '0.5rem',
-                    fontSize: '0.875rem',
-                    outline: 'none',
-                    transition: 'all 0.2s',
-                    boxSizing: 'border-box'
-                  }}
-                  onFocus={(e) => {
-                    e.currentTarget.style.borderColor = COLORS.primary;
-                    e.currentTarget.style.boxShadow = '0 0 0 2px rgba(37,99,235,0.2)';
-                  }}
-                  onBlur={(e) => {
-                    e.currentTarget.style.borderColor = COLORS.accent;
-                    e.currentTarget.style.boxShadow = 'none';
-                  }}
+                  className="w-full px-4 py-2.5 border border-gray-200 rounded-lg 
+                           focus:ring-2 focus:ring-blue-500 focus:border-blue-500 
+                           outline-none transition-all"
                 />
               </div>
 
               <div>
-                <label style={{ display: 'block', fontSize: '0.875rem', fontWeight: 500, color: COLORS.secondary, marginBottom: '0.25rem' }}>
-                  Apellido *
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  <div className="flex items-center gap-2">
+                    <FaUserTag className="text-blue-500" />
+                    Apellido *
+                  </div>
                 </label>
                 <input
                   type="text"
@@ -547,30 +597,18 @@ const handleSubmit = async (e) => {
                   onChange={handleChange}
                   required
                   placeholder="Ingrese el apellido"
-                  style={{
-                    width: '100%',
-                    padding: '0.75rem',
-                    border: `1px solid ${COLORS.accent}`,
-                    borderRadius: '0.5rem',
-                    fontSize: '0.875rem',
-                    outline: 'none',
-                    transition: 'all 0.2s',
-                    boxSizing: 'border-box'
-                  }}
-                  onFocus={(e) => {
-                    e.currentTarget.style.borderColor = COLORS.primary;
-                    e.currentTarget.style.boxShadow = '0 0 0 2px rgba(37,99,235,0.2)';
-                  }}
-                  onBlur={(e) => {
-                    e.currentTarget.style.borderColor = COLORS.accent;
-                    e.currentTarget.style.boxShadow = 'none';
-                  }}
+                  className="w-full px-4 py-2.5 border border-gray-200 rounded-lg 
+                           focus:ring-2 focus:ring-blue-500 focus:border-blue-500 
+                           outline-none transition-all"
                 />
               </div>
 
               <div>
-                <label style={{ display: 'block', fontSize: '0.875rem', fontWeight: 500, color: COLORS.secondary, marginBottom: '0.25rem' }}>
-                  Teléfono *
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  <div className="flex items-center gap-2">
+                    <FaPhone className="text-blue-500" />
+                    Teléfono *
+                  </div>
                 </label>
                 <input
                   type="tel"
@@ -579,30 +617,18 @@ const handleSubmit = async (e) => {
                   onChange={handleChange}
                   required
                   placeholder="Ej: 50000000"
-                  style={{
-                    width: '100%',
-                    padding: '0.75rem',
-                    border: `1px solid ${COLORS.accent}`,
-                    borderRadius: '0.5rem',
-                    fontSize: '0.875rem',
-                    outline: 'none',
-                    transition: 'all 0.2s',
-                    boxSizing: 'border-box'
-                  }}
-                  onFocus={(e) => {
-                    e.currentTarget.style.borderColor = COLORS.primary;
-                    e.currentTarget.style.boxShadow = '0 0 0 2px rgba(37,99,235,0.2)';
-                  }}
-                  onBlur={(e) => {
-                    e.currentTarget.style.borderColor = COLORS.accent;
-                    e.currentTarget.style.boxShadow = 'none';
-                  }}
+                  className="w-full px-4 py-2.5 border border-gray-200 rounded-lg 
+                           focus:ring-2 focus:ring-blue-500 focus:border-blue-500 
+                           outline-none transition-all"
                 />
               </div>
 
               <div>
-                <label style={{ display: 'block', fontSize: '0.875rem', fontWeight: 500, color: COLORS.secondary, marginBottom: '0.25rem' }}>
-                  Correo *
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  <div className="flex items-center gap-2">
+                    <FaEnvelope className="text-blue-500" />
+                    Correo *
+                  </div>
                 </label>
                 <input
                   type="email"
@@ -611,30 +637,18 @@ const handleSubmit = async (e) => {
                   onChange={handleChange}
                   required
                   placeholder="correo@ejemplo.com"
-                  style={{
-                    width: '100%',
-                    padding: '0.75rem',
-                    border: `1px solid ${COLORS.accent}`,
-                    borderRadius: '0.5rem',
-                    fontSize: '0.875rem',
-                    outline: 'none',
-                    transition: 'all 0.2s',
-                    boxSizing: 'border-box'
-                  }}
-                  onFocus={(e) => {
-                    e.currentTarget.style.borderColor = COLORS.primary;
-                    e.currentTarget.style.boxShadow = '0 0 0 2px rgba(37,99,235,0.2)';
-                  }}
-                  onBlur={(e) => {
-                    e.currentTarget.style.borderColor = COLORS.accent;
-                    e.currentTarget.style.boxShadow = 'none';
-                  }}
+                  className="w-full px-4 py-2.5 border border-gray-200 rounded-lg 
+                           focus:ring-2 focus:ring-blue-500 focus:border-blue-500 
+                           outline-none transition-all"
                 />
               </div>
 
               <div>
-                <label style={{ display: 'block', fontSize: '0.875rem', fontWeight: 500, color: COLORS.secondary, marginBottom: '0.25rem' }}>
-                  {editando ? 'Nueva contrasena (opcional)' : 'contrasena *'}
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  <div className="flex items-center gap-2">
+                    <FaKey className="text-blue-500" />
+                    {editando ? 'Nueva contraseña (opcional)' : 'Contraseña *'}
+                  </div>
                 </label>
                 <input
                   type="password"
@@ -642,136 +656,77 @@ const handleSubmit = async (e) => {
                   value={formData.contrasena}
                   onChange={handleChange}
                   required={!editando}
-                  placeholder={editando ? 'Dejar vacío para mantener la actual' : 'Ingrese la contrasena'}
-                  style={{
-                    width: '100%',
-                    padding: '0.75rem',
-                    border: `1px solid ${COLORS.accent}`,
-                    borderRadius: '0.5rem',
-                    fontSize: '0.875rem',
-                    outline: 'none',
-                    transition: 'all 0.2s',
-                    boxSizing: 'border-box'
-                  }}
-                  onFocus={(e) => {
-                    e.currentTarget.style.borderColor = COLORS.primary;
-                    e.currentTarget.style.boxShadow = '0 0 0 2px rgba(37,99,235,0.2)';
-                  }}
-                  onBlur={(e) => {
-                    e.currentTarget.style.borderColor = COLORS.accent;
-                    e.currentTarget.style.boxShadow = 'none';
-                  }}
+                  placeholder={editando ? 'Dejar vacío para mantener la actual' : 'Ingrese la contraseña'}
+                  className="w-full px-4 py-2.5 border border-gray-200 rounded-lg 
+                           focus:ring-2 focus:ring-blue-500 focus:border-blue-500 
+                           outline-none transition-all"
                 />
               </div>
 
               <div>
-                <label style={{ display: 'block', fontSize: '0.875rem', fontWeight: 500, color: COLORS.secondary, marginBottom: '0.25rem' }}>
-                  Puesto *
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  <div className="flex items-center gap-2">
+                    <FaBriefcase className="text-blue-500" />
+                    Puesto *
+                  </div>
+                  {!editando && (
+                    <span className="text-xs text-gray-400 ml-2">
+                      (Solo puestos sin usuario asignado)
+                    </span>
+                  )}
                 </label>
                 <select
                   name="pue_id"
                   value={formData.pue_id}
                   onChange={handleChange}
                   required
-                  style={{
-                    width: '100%',
-                    padding: '0.75rem',
-                    border: `1px solid ${COLORS.accent}`,
-                    borderRadius: '0.5rem',
-                    fontSize: '0.875rem',
-                    outline: 'none',
-                    transition: 'all 0.2s',
-                    boxSizing: 'border-box',
-                    backgroundColor: 'white'
-                  }}
-                  onFocus={(e) => {
-                    e.currentTarget.style.borderColor = COLORS.primary;
-                    e.currentTarget.style.boxShadow = '0 0 0 2px rgba(37,99,235,0.2)';
-                  }}
-                  onBlur={(e) => {
-                    e.currentTarget.style.borderColor = COLORS.accent;
-                    e.currentTarget.style.boxShadow = 'none';
-                  }}
+                  className="w-full px-4 py-2.5 border border-gray-200 rounded-lg 
+                           focus:ring-2 focus:ring-blue-500 focus:border-blue-500 
+                           outline-none transition-all bg-white"
                 >
                   <option value="">Seleccione un puesto</option>
                   {puestos.map((p) => (
                     <option key={p.pue_id} value={p.pue_id}>
-                      {p.pue_nombre}
+                      {p.pue_nombre} 
+                      {!editando && p.pue_usuario_asignado && ' (Asignado)'}
+                      {editando && p.pue_id === formData.pue_id && ' (Actual)'}
                     </option>
                   ))}
                 </select>
               </div>
 
               {error && (
-                <div style={{
-                  backgroundColor: '#FEE2E2',
-                  border: '1px solid #FCA5A5',
-                  color: '#991B1B',
-                  padding: '0.75rem',
-                  borderRadius: '0.5rem',
-                  fontSize: '0.875rem'
-                }}>
+                <div className="bg-red-50 border border-red-200 text-red-700 p-3 rounded-lg text-sm">
                   {error}
                 </div>
               )}
 
-              <div style={{
-                display: 'flex',
-                justifyContent: 'flex-end',
-                gap: '0.75rem',
-                marginTop: '0.5rem'
-              }}>
+              <div className="flex justify-end gap-3 pt-2">
                 <button
                   type="button"
                   onClick={cerrarModal}
-                  style={{
-                    padding: '0.75rem 1.5rem',
-                    border: `1px solid ${COLORS.accent}`,
-                    borderRadius: '0.5rem',
-                    backgroundColor: 'white',
-                    color: COLORS.secondary,
-                    cursor: 'pointer',
-                    transition: 'all 0.2s'
-                  }}
-                  onMouseEnter={(e) => e.currentTarget.style.backgroundColor = COLORS.accent}
-                  onMouseLeave={(e) => e.currentTarget.style.backgroundColor = 'white'}
+                  className="px-6 py-2.5 border border-gray-200 rounded-lg text-gray-600 
+                           hover:bg-gray-50 transition-all hover:scale-105 active:scale-95"
                 >
                   Cancelar
                 </button>
                 <button
                   type="submit"
                   disabled={guardando}
-                  style={{
-                    padding: '0.75rem 1.5rem',
-                    backgroundColor: COLORS.primary,
-                    color: 'white',
-                    border: 'none',
-                    borderRadius: '0.5rem',
-                    cursor: guardando ? 'not-allowed' : 'pointer',
-                    display: 'flex',
-                    alignItems: 'center',
-                    gap: '0.5rem',
-                    fontWeight: 500,
-                    transition: 'all 0.2s',
-                    opacity: guardando ? 0.6 : 1
-                  }}
-                  onMouseEnter={(e) => {
-                    if (!guardando) {
-                      e.currentTarget.style.transform = 'scale(1.02)';
-                    }
-                  }}
-                  onMouseLeave={(e) => {
-                    e.currentTarget.style.transform = 'scale(1)';
-                  }}
+                  className="px-6 py-2.5 bg-blue-600 text-white rounded-lg font-medium 
+                           hover:bg-blue-700 transition-all hover:scale-105 active:scale-95 
+                           disabled:opacity-60 disabled:cursor-not-allowed 
+                           flex items-center gap-2 shadow-lg shadow-blue-600/30"
                 >
                   {guardando ? (
                     <>
-                      <FaSpinner style={{ animation: 'spin 1s linear infinite' }} />
+                      <FaSpinner className="animate-spin" />
                       Guardando...
                     </>
                   ) : (
                     <>
-                      <FaSave /> {editando ? 'Actualizar' : 'Crear'}
+                      <FaSave />
+                      {editando ? 'Actualizar' : 'Crear'}
                     </>
                   )}
                 </button>
@@ -780,14 +735,6 @@ const handleSubmit = async (e) => {
           </div>
         </div>
       )}
-
-      {/* Estilos para animaciones */}
-      <style>{`
-        @keyframes spin {
-          from { transform: rotate(0deg); }
-          to { transform: rotate(360deg); }
-        }
-      `}</style>
     </div>
   );
 }

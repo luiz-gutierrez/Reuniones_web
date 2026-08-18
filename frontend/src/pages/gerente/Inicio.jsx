@@ -1,6 +1,6 @@
 import { useAuth } from '../../context/AuthContext';
 
-export default function UsuarioInicio() {
+export default function GerenteInicio() {
   const { user } = useAuth();
   return (
     <div className="page">

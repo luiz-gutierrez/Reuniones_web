@@ -1,9 +1,3 @@
-
--- Base de datos: `diagsa_sistema`
---
-
--- --------------------------------------------------------
-
 --
 -- Estructura de tabla para la tabla `asistencias`
 --
@@ -16,9 +10,6 @@ CREATE TABLE `asistencias` (
   `created_at` timestamp NOT NULL DEFAULT current_timestamp(),
   `update_at` timestamp NOT NULL DEFAULT current_timestamp() ON UPDATE current_timestamp()
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
-
--- --------------------------------------------------------
-
 --
 -- Estructura de tabla para la tabla `departamentos`
 --
@@ -58,27 +49,8 @@ INSERT INTO `departamentos` (`dep_id`, `dep_nombre`, `created_at`, `update_at`) 
 (21, 'Capacitacion', '2026-08-12 05:15:33', '2026-08-12 05:15:33'),
 (22, 'Reclutamiento y Seleccion', '2026-08-12 05:15:33', '2026-08-12 05:15:33'),
 (23, 'Intendencia', '2026-08-12 05:15:33', '2026-08-12 05:15:33'),
-(24, 'Director ', '2026-08-12 05:22:45', '2026-08-12 05:22:45');
-
--- --------------------------------------------------------
-
---
--- Estructura de tabla para la tabla `minutas`
---
-
-CREATE TABLE `minutas` (
-  `min_id` int(11) NOT NULL,
-  `min_nombre` varchar(150) NOT NULL,
-  `min_lugar` varchar(150) DEFAULT NULL,
-  `min_descripcion` text DEFAULT NULL,
-  `reu_id` int(11) NOT NULL,
-  `use_id` int(11) NOT NULL,
-  `created_at` timestamp NOT NULL DEFAULT current_timestamp(),
-  `update_at` timestamp NOT NULL DEFAULT current_timestamp() ON UPDATE current_timestamp()
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
-
--- --------------------------------------------------------
-
+(24, 'Director ', '2026-08-12 05:22:45', '2026-08-12 05:22:45'),
+(25, 'asistente', '2026-08-12 18:15:23', '2026-08-12 18:15:23');
 --
 -- Estructura de tabla para la tabla `puestos`
 --
@@ -99,7 +71,7 @@ CREATE TABLE `puestos` (
 
 INSERT INTO `puestos` (`pue_id`, `pue_nombre`, `rol_id`, `dep_id`, `pue_padre_id`, `created_at`, `update_at`) VALUES
 (1, 'Gerente general', 1, 24, NULL, '2026-08-12 05:34:54', '2026-08-12 05:34:54'),
-(2, 'Secretaria', 2, NULL, 1, '2026-08-12 05:40:02', '2026-08-12 05:40:02'),
+(2, 'Asistente', 2, 25, 1, '2026-08-12 05:40:02', '2026-08-12 18:15:40'),
 (3, 'Gerente Administrativo y Finanzas', 3, 1, 1, '2026-08-12 05:40:02', '2026-08-12 05:40:02'),
 (4, 'Gerente Comercial', 3, 2, 1, '2026-08-12 05:40:02', '2026-08-12 05:40:02'),
 (5, 'Gerente Operativo', 3, 3, 1, '2026-08-12 05:40:02', '2026-08-12 05:40:02'),
@@ -124,8 +96,6 @@ INSERT INTO `puestos` (`pue_id`, `pue_nombre`, `rol_id`, `dep_id`, `pue_padre_id
 (24, 'Jefe depto Reclutamiento y Seleccion', 4, 22, 6, '2026-08-12 06:11:32', '2026-08-12 06:11:32'),
 (25, 'Jefe depto Intendencia', 4, 23, 6, '2026-08-12 06:11:32', '2026-08-12 06:11:32');
 
--- --------------------------------------------------------
-
 --
 -- Estructura de tabla para la tabla `reuniones`
 --
@@ -141,8 +111,6 @@ CREATE TABLE `reuniones` (
   `created_at` timestamp NOT NULL DEFAULT current_timestamp(),
   `update_at` timestamp NOT NULL DEFAULT current_timestamp() ON UPDATE current_timestamp()
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
-
--- --------------------------------------------------------
 
 --
 -- Estructura de tabla para la tabla `roles`
@@ -161,12 +129,10 @@ CREATE TABLE `roles` (
 
 INSERT INTO `roles` (`rol_id`, `rol_nombre`, `created_at`, `update_at`) VALUES
 (1, 'Admin', '2026-08-12 05:00:21', '2026-08-12 05:00:21'),
-(2, 'Secretaria', '2026-08-12 05:00:21', '2026-08-12 05:00:21'),
+(2, 'Secretaria', '2026-08-12 05:00:21', '2026-08-13 00:08:46'),
 (3, 'Gerente', '2026-08-12 05:00:21', '2026-08-12 05:00:21'),
 (4, 'JefeDepto', '2026-08-12 05:00:21', '2026-08-12 15:47:10'),
 (5, 'Auxiliar', '2026-08-12 05:00:21', '2026-08-12 05:00:21');
-
--- --------------------------------------------------------
 
 --
 -- Estructura de tabla para la tabla `tareas`
@@ -176,16 +142,14 @@ CREATE TABLE `tareas` (
   `tar_id` int(11) NOT NULL,
   `tar_nombre` varchar(150) NOT NULL,
   `tar_descripcion` text DEFAULT NULL,
-  `tar_estatus` enum('Realizar','Proceso','Finalizado') NOT NULL DEFAULT 'Realizar',
+  `tar_estatus` enum('Iniciar','Proceso','Revision','Finalizado') NOT NULL DEFAULT 'Iniciar',
   `tar_prioridad` enum('baja','media','alta') NOT NULL DEFAULT 'media',
   `tar_fecha` date NOT NULL,
   `use_id` int(11) DEFAULT NULL,
-  `min_id` int(11) DEFAULT NULL,
+  `reu_id` int(11) DEFAULT NULL,
   `created_at` timestamp NOT NULL DEFAULT current_timestamp(),
   `update_at` timestamp NOT NULL DEFAULT current_timestamp() ON UPDATE current_timestamp()
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
-
--- --------------------------------------------------------
 
 --
 -- Estructura de tabla para la tabla `users`
@@ -203,20 +167,12 @@ CREATE TABLE `users` (
   `created_at` timestamp NOT NULL DEFAULT current_timestamp(),
   `update_at` timestamp NOT NULL DEFAULT current_timestamp() ON UPDATE current_timestamp()
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
-
 --
 -- Volcado de datos para la tabla `users`
 --
-
 INSERT INTO `users` (`id`, `nombre`, `apellido`, `telefono`, `correo`, `activo`, `contrasena`, `pue_id`, `created_at`, `update_at`) VALUES
-(2, 'Arnulfo', 'Perez', '1234567890', 'arnulfo@gmail.com', 1, '$2a$10$Kh5tBS2tHLWNtoJHI9H6Feq.icaoJdNCDw1THNXA23BSi7yj4PsRu', 1, '2026-08-12 16:21:16', '2026-08-12 16:21:16');
+(1, 'Arnulfo', 'Perez', '1234567890', 'arnulfo@gmail.com', 1, '$2a$10$Kh5tBS2tHLWNtoJHI9H6Feq.icaoJdNCDw1THNXA23BSi7yj4PsRu', 1, '2026-08-12 16:21:16', '2026-08-12 16:21:16');
 
---
--- Índices para tablas volcadas
---
-
---
--- Indices de la tabla `asistencias`
 --
 ALTER TABLE `asistencias`
   ADD PRIMARY KEY (`asi_id`),
@@ -228,14 +184,6 @@ ALTER TABLE `asistencias`
 --
 ALTER TABLE `departamentos`
   ADD PRIMARY KEY (`dep_id`);
-
---
--- Indices de la tabla `minutas`
---
-ALTER TABLE `minutas`
-  ADD PRIMARY KEY (`min_id`),
-  ADD KEY `fk_minutas_reunion` (`reu_id`),
-  ADD KEY `fk_minutas_user` (`use_id`);
 
 --
 -- Indices de la tabla `puestos`
@@ -265,7 +213,7 @@ ALTER TABLE `roles`
 ALTER TABLE `tareas`
   ADD PRIMARY KEY (`tar_id`),
   ADD KEY `fk_tareas_user` (`use_id`),
-  ADD KEY `fk_tareas_minuta` (`min_id`);
+  ADD KEY `fk_tareas_reunion` (`reu_id`) USING BTREE;
 
 --
 -- Indices de la tabla `users`
@@ -284,19 +232,13 @@ ALTER TABLE `users`
 -- AUTO_INCREMENT de la tabla `asistencias`
 --
 ALTER TABLE `asistencias`
-  MODIFY `asi_id` int(11) NOT NULL AUTO_INCREMENT;
+  MODIFY `asi_id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=162;
 
 --
 -- AUTO_INCREMENT de la tabla `departamentos`
 --
 ALTER TABLE `departamentos`
-  MODIFY `dep_id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=25;
-
---
--- AUTO_INCREMENT de la tabla `minutas`
---
-ALTER TABLE `minutas`
-  MODIFY `min_id` int(11) NOT NULL AUTO_INCREMENT;
+  MODIFY `dep_id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=26;
 
 --
 -- AUTO_INCREMENT de la tabla `puestos`
@@ -308,7 +250,7 @@ ALTER TABLE `puestos`
 -- AUTO_INCREMENT de la tabla `reuniones`
 --
 ALTER TABLE `reuniones`
-  MODIFY `reu_id` int(11) NOT NULL AUTO_INCREMENT;
+  MODIFY `reu_id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=22;
 
 --
 -- AUTO_INCREMENT de la tabla `roles`
@@ -320,13 +262,13 @@ ALTER TABLE `roles`
 -- AUTO_INCREMENT de la tabla `tareas`
 --
 ALTER TABLE `tareas`
-  MODIFY `tar_id` int(11) NOT NULL AUTO_INCREMENT;
+  MODIFY `tar_id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=21;
 
 --
 -- AUTO_INCREMENT de la tabla `users`
 --
 ALTER TABLE `users`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=3;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=12;
 
 --
 -- Restricciones para tablas volcadas
@@ -338,13 +280,6 @@ ALTER TABLE `users`
 ALTER TABLE `asistencias`
   ADD CONSTRAINT `fk_asistencias_reunion` FOREIGN KEY (`reu_id`) REFERENCES `reuniones` (`reu_id`) ON DELETE CASCADE ON UPDATE CASCADE,
   ADD CONSTRAINT `fk_asistencias_user` FOREIGN KEY (`use_id`) REFERENCES `users` (`id`) ON DELETE CASCADE ON UPDATE CASCADE;
-
---
--- Filtros para la tabla `minutas`
---
-ALTER TABLE `minutas`
-  ADD CONSTRAINT `fk_minutas_reunion` FOREIGN KEY (`reu_id`) REFERENCES `reuniones` (`reu_id`) ON DELETE CASCADE ON UPDATE CASCADE,
-  ADD CONSTRAINT `fk_minutas_user` FOREIGN KEY (`use_id`) REFERENCES `users` (`id`) ON UPDATE CASCADE;
 
 --
 -- Filtros para la tabla `puestos`
@@ -364,8 +299,8 @@ ALTER TABLE `reuniones`
 -- Filtros para la tabla `tareas`
 --
 ALTER TABLE `tareas`
-  ADD CONSTRAINT `fk_tareas_minuta` FOREIGN KEY (`min_id`) REFERENCES `minutas` (`min_id`) ON DELETE SET NULL ON UPDATE CASCADE,
-  ADD CONSTRAINT `fk_tareas_user` FOREIGN KEY (`use_id`) REFERENCES `users` (`id`) ON DELETE SET NULL ON UPDATE CASCADE;
+  ADD CONSTRAINT `fk_tareas_user` FOREIGN KEY (`use_id`) REFERENCES `users` (`id`) ON DELETE SET NULL ON UPDATE CASCADE,
+  ADD CONSTRAINT `tareas_ibfk_1` FOREIGN KEY (`reu_id`) REFERENCES `reuniones` (`reu_id`) ON DELETE CASCADE ON UPDATE CASCADE;
 
 --
 -- Filtros para la tabla `users`

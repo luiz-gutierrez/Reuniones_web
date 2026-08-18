@@ -5,8 +5,6 @@ import { pool } from '../config/db.js';
 // GET /api/usuarios (solo admin)
 async function getUsuarios(req, res) {
   try {
-    console.log('📋 Obteniendo usuarios...');
-    
     const [rows] = await pool.query(
       `SELECT 
         u.id, 
@@ -16,8 +14,10 @@ async function getUsuarios(req, res) {
         u.correo,
         u.activo,
         u.created_at,
+        u.pue_id,
         p.pue_nombre as puesto,
         d.dep_nombre as departamento,
+        r.rol_id,
         r.rol_nombre as rol
        FROM users u
        INNER JOIN puestos p ON u.pue_id = p.pue_id
@@ -25,15 +25,38 @@ async function getUsuarios(req, res) {
        INNER JOIN roles r ON p.rol_id = r.rol_id
        ORDER BY u.id DESC`
     );
-    
-    console.log(`✅ Usuarios encontrados: ${rows.length}`);
     return res.json(rows);
-    
   } catch (error) {
-    console.error('❌ Error al obtener usuarios:', error);
-    return res.status(500).json({ 
-      message: 'Error interno del servidor'
-    });
+    console.error('Error al obtener usuarios:', error);
+    return res.status(500).json({ message: 'Error interno del servidor' });
+  }
+}
+
+// GET /api/roles
+async function getRoles(req, res) {
+  try {
+    const [rows] = await pool.query('SELECT * FROM roles ORDER BY rol_nombre');
+    return res.json(rows);
+  } catch (error) {
+    console.error('Error al obtener roles:', error);
+    return res.status(500).json({ message: 'Error al obtener roles' });
+  }
+}
+
+// GET /api/puestos/sin-usuarios
+async function getPuestosSinUsuarios(req, res) {
+  try {
+    const [rows] = await pool.query(
+      `SELECT p.*, 
+        (SELECT COUNT(*) FROM users u WHERE u.pue_id = p.pue_id) as usuarios_asignados
+       FROM puestos p
+       WHERE (SELECT COUNT(*) FROM users u WHERE u.pue_id = p.pue_id) = 0
+       ORDER BY p.pue_nombre`
+    );
+    return res.json(rows);
+  } catch (error) {
+    console.error('Error al obtener puestos sin usuarios:', error);
+    return res.status(500).json({ message: 'Error al obtener puestos' });
   }
 }
 
@@ -132,4 +155,8 @@ async function crearUsuario(req, res) {
   }
 }
 
-export { getUsuarios, crearUsuario };
+export { 
+getUsuarios, 
+getRoles,
+getPuestosSinUsuarios,
+crearUsuario };
