@@ -1,8 +1,8 @@
 import { useEffect, useState } from 'react';
 import api from '../../api/axios';
-import { 
-  FaSave, 
-  FaTrash, 
+import {
+  FaSave,
+  FaTrash,
   FaCalendarAlt,
   FaClock,
   FaUser,
@@ -16,25 +16,26 @@ import {
 } from 'react-icons/fa';
 
 export default function SecretariaReuniones() {
+  // ========== ESTADOS PRINCIPALES ==========
   const [reuniones, setReuniones] = useState([]);
   const [usuarios, setUsuarios] = useState([]);
   const [cargando, setCargando] = useState(true);
   const [error, setError] = useState('');
 
-  // Datos de la reunión
-  const [nombre, setNombre] = useState('');
-  const [descripcion, setDescripcion] = useState('');
-  const [lugar, setLugar] = useState('');
-  const [fecha, setFecha] = useState('');
-  const [hora, setHora] = useState('');
+  // ========== ESTADO PARA CREAR REUNIÓN ==========
+  const [mostrarModalCrear, setMostrarModalCrear] = useState(false);
+  const [guardando, setGuardando] = useState(false);
+  const [formReunion, setFormReunion] = useState({
+    nombre: '',
+    descripcion: '',
+    lugar: '',
+    fecha: '',
+    hora: ''
+  });
   const [invitados, setInvitados] = useState([]);
   const [busquedaUsuario, setBusquedaUsuario] = useState('');
-  const [guardando, setGuardando] = useState(false);
 
-  // Estado del modal
-  const [mostrarModalCrear, setMostrarModalCrear] = useState(false);
-
-  // Estados para el modal de edición de asistentes
+  // ========== ESTADO PARA EDITAR ASISTENTES ==========
   const [mostrarModalAsistentes, setMostrarModalAsistentes] = useState(false);
   const [reunionSeleccionada, setReunionSeleccionada] = useState(null);
   const [asistentesSeleccionados, setAsistentesSeleccionados] = useState([]);
@@ -42,11 +43,13 @@ export default function SecretariaReuniones() {
   const [guardandoAsistentes, setGuardandoAsistentes] = useState(false);
   const [busquedaAsistente, setBusquedaAsistente] = useState('');
 
+  // ========== EFFECTS ==========
   useEffect(() => {
     cargarReuniones();
     cargarUsuarios();
   }, []);
 
+  // ========== FUNCIONES DE CARGA ==========
   async function cargarReuniones() {
     setCargando(true);
     setError('');
@@ -69,33 +72,43 @@ export default function SecretariaReuniones() {
     }
   }
 
-  // Abrir modal de creación
+  // ========== FUNCIONES PARA CREAR REUNIÓN ==========
   const abrirModalCrear = () => {
-    setNombre('');
-    setDescripcion('');
-    setLugar('');
-    setFecha('');
-    setHora('');
+    setFormReunion({
+      nombre: '',
+      descripcion: '',
+      lugar: '',
+      fecha: '',
+      hora: ''
+    });
     setInvitados([]);
     setBusquedaUsuario('');
     setError('');
     setMostrarModalCrear(true);
   };
 
-  // Cerrar modal de creación
   const cerrarModalCrear = () => {
     setMostrarModalCrear(false);
-    setNombre('');
-    setDescripcion('');
-    setLugar('');
-    setFecha('');
-    setHora('');
+    setFormReunion({
+      nombre: '',
+      descripcion: '',
+      lugar: '',
+      fecha: '',
+      hora: ''
+    });
     setInvitados([]);
     setBusquedaUsuario('');
     setError('');
   };
 
-  // Toggle selección de invitado
+  const handleFormChange = (e) => {
+    const { name, value } = e.target;
+    setFormReunion(prev => ({
+      ...prev,
+      [name]: value
+    }));
+  };
+
   const toggleInvitado = (userId) => {
     setInvitados(prev => {
       if (prev.includes(userId)) {
@@ -106,35 +119,25 @@ export default function SecretariaReuniones() {
     });
   };
 
-  // Crear reunión con invitados
-  async function handleCrear(e) {
+  const handleCrear = async (e) => {
     e.preventDefault();
     setGuardando(true);
     setError('');
 
-    // Validar que haya al menos un 2 invitado
-    if (invitados.length === 1) {
+    if (invitados.length < 2) {
       setError('Debes seleccionar al menos 2 invitados para la reunión');
       setGuardando(false);
       return;
     }
 
     try {
-      const response = await api.post('/reuniones', {
-        nombre,
-        descripcion,
-        lugar,
-        fecha,
-        hora,
-        invitados: invitados
+      await api.post('/reuniones', {
+        ...formReunion,
+        invitados
       });
 
-      console.log('✅ Reunión creada:', response.data);
-
-      // Limpiar y cerrar modal
       cerrarModalCrear();
       await cargarReuniones();
-
     } catch (err) {
       const mensaje = err.response?.data?.message || 'Error al crear reunión';
       setError(mensaje);
@@ -142,14 +145,14 @@ export default function SecretariaReuniones() {
     } finally {
       setGuardando(false);
     }
-  }
+  };
 
-  // Abrir modal para editar asistentes
+  // ========== FUNCIONES PARA EDITAR ASISTENTES ==========
   const abrirModalAsistentes = async (reunion) => {
     setReunionSeleccionada(reunion);
     setAsistentesSeleccionados([]);
     setBusquedaAsistente('');
-    
+
     try {
       const { data } = await api.get(`/reuniones/${reunion.reu_id}/invitados`);
       setAsistentesGuardados(data);
@@ -160,11 +163,19 @@ export default function SecretariaReuniones() {
       setAsistentesGuardados([]);
       setAsistentesSeleccionados([]);
     }
-    
+
     setMostrarModalAsistentes(true);
   };
 
-  // Toggle selección de usuario en el modal
+  const cerrarModalAsistentes = () => {
+    setMostrarModalAsistentes(false);
+    setReunionSeleccionada(null);
+    setAsistentesSeleccionados([]);
+    setAsistentesGuardados([]);
+    setError('');
+    setBusquedaAsistente('');
+  };
+
   const toggleAsistente = (userId) => {
     setAsistentesSeleccionados(prev => {
       if (prev.includes(userId)) {
@@ -175,10 +186,9 @@ export default function SecretariaReuniones() {
     });
   };
 
-  // Guardar asistentes editados
   const guardarAsistentes = async () => {
     if (!reunionSeleccionada) return;
-    
+
     setGuardandoAsistentes(true);
     setError('');
 
@@ -191,45 +201,39 @@ export default function SecretariaReuniones() {
       setAsistentesGuardados(data);
 
       alert('✅ Asistentes actualizados correctamente');
+      cerrarModalAsistentes();
       await cargarReuniones();
-
     } catch (err) {
       setError(err.response?.data?.message || 'Error al guardar asistentes');
+      console.error('❌ Error al guardar asistentes:', err);
     } finally {
       setGuardandoAsistentes(false);
     }
   };
 
-  const cerrarModalAsistentes = () => {
-    setMostrarModalAsistentes(false);
-    setReunionSeleccionada(null);
-    setAsistentesSeleccionados([]);
-    setAsistentesGuardados([]);
-    setError('');
-  };
-
-  // Formatear fecha
+  // ========== FUNCIONES DE UTILIDAD ==========
   const formatearFecha = (fecha) => {
     const opciones = { year: 'numeric', month: 'long', day: 'numeric' };
     return new Date(fecha).toLocaleDateString('es-ES', opciones);
   };
 
-  // Filtrar usuarios
-  const usuariosFiltrados = usuarios.filter(u => 
+  // ========== FILTROS ==========
+  const usuariosFiltrados = usuarios.filter(u =>
     u.nombre.toLowerCase().includes(busquedaUsuario.toLowerCase()) ||
     u.apellido.toLowerCase().includes(busquedaUsuario.toLowerCase()) ||
     u.correo.toLowerCase().includes(busquedaUsuario.toLowerCase())
   );
 
-  const asistentesFiltrados = usuarios.filter(u => 
+  const asistentesFiltrados = usuarios.filter(u =>
     u.nombre.toLowerCase().includes(busquedaAsistente.toLowerCase()) ||
     u.apellido.toLowerCase().includes(busquedaAsistente.toLowerCase()) ||
     u.correo.toLowerCase().includes(busquedaAsistente.toLowerCase())
   );
 
+  // ========== RENDER ==========
   return (
     <div className="p-6 max-w-7xl mx-auto">
-      {/* Header */}
+      {/* ===== HEADER ===== */}
       <div className="flex justify-between items-center flex-wrap gap-4 mb-6">
         <div>
           <h1 className="text-3xl font-bold text-slate-800 m-0">
@@ -247,7 +251,7 @@ export default function SecretariaReuniones() {
         </button>
       </div>
 
-      {/* Lista de reuniones */}
+      {/* ===== ESTADOS DE CARGA ===== */}
       {cargando && (
         <div className="text-center py-12 text-slate-800 opacity-60">
           <FaSpinner className="text-4xl animate-spin mx-auto" />
@@ -261,6 +265,7 @@ export default function SecretariaReuniones() {
         </div>
       )}
 
+      {/* ===== LISTA DE REUNIONES ===== */}
       {!cargando && !error && (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
           {reuniones.length === 0 ? (
@@ -318,10 +323,16 @@ export default function SecretariaReuniones() {
         </div>
       )}
 
-      {/* Modal para crear reunión */}
+      {/* ===== MODAL CREAR REUNIÓN ===== */}
       {mostrarModalCrear && (
-        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4" onClick={cerrarModalCrear}>
-          <div className="bg-white rounded-2xl p-8 max-w-2xl w-full max-h-[90vh] overflow-y-auto" onClick={(e) => e.stopPropagation()}>
+        <div
+          className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4"
+          onClick={cerrarModalCrear}
+        >
+          <div
+            className="bg-white rounded-2xl p-8 max-w-2xl w-full max-h-[90vh] overflow-y-auto"
+            onClick={(e) => e.stopPropagation()}
+          >
             <div className="flex justify-between items-center mb-6">
               <h2 className="text-2xl font-bold text-slate-800 m-0">
                 <FaUserPlus className="inline mr-2" />
@@ -337,80 +348,90 @@ export default function SecretariaReuniones() {
 
             <form onSubmit={handleCrear}>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                {/* Nombre */}
                 <div>
                   <label className="block text-sm font-medium text-slate-800 mb-1">
                     Nombre *
                   </label>
                   <input
                     type="text"
+                    name="nombre"
                     placeholder="Nombre de la reunión"
-                    value={nombre}
-                    onChange={(e) => setNombre(e.target.value)}
+                    value={formReunion.nombre}
+                    onChange={handleFormChange}
                     required
                     className="w-full px-4 py-3 border border-slate-200 rounded-lg text-sm outline-none focus:border-blue-600 focus:ring-2 focus:ring-blue-600/20 box-border transition-all"
                   />
                 </div>
 
+                {/* Lugar */}
                 <div>
                   <label className="block text-sm font-medium text-slate-800 mb-1">
                     Lugar *
                   </label>
                   <input
                     type="text"
+                    name="lugar"
                     placeholder="Lugar de la reunión"
-                    value={lugar}
-                    onChange={(e) => setLugar(e.target.value)}
+                    value={formReunion.lugar}
+                    onChange={handleFormChange}
                     required
                     className="w-full px-4 py-3 border border-slate-200 rounded-lg text-sm outline-none focus:border-blue-600 focus:ring-2 focus:ring-blue-600/20 box-border transition-all"
                   />
                 </div>
 
+                {/* Fecha */}
                 <div>
                   <label className="block text-sm font-medium text-slate-800 mb-1">
                     Fecha *
                   </label>
                   <input
                     type="date"
-                    value={fecha}
-                    onChange={(e) => setFecha(e.target.value)}
+                    name="fecha"
+                    value={formReunion.fecha}
+                    onChange={handleFormChange}
                     required
                     className="w-full px-4 py-3 border border-slate-200 rounded-lg text-sm outline-none focus:border-blue-600 focus:ring-2 focus:ring-blue-600/20 box-border transition-all"
                   />
                 </div>
 
+                {/* Hora */}
                 <div>
                   <label className="block text-sm font-medium text-slate-800 mb-1">
                     Hora *
                   </label>
                   <input
                     type="time"
-                    value={hora}
-                    onChange={(e) => setHora(e.target.value)}
+                    name="hora"
+                    value={formReunion.hora}
+                    onChange={handleFormChange}
                     required
                     className="w-full px-4 py-3 border border-slate-200 rounded-lg text-sm outline-none focus:border-blue-600 focus:ring-2 focus:ring-blue-600/20 box-border transition-all"
                   />
                 </div>
 
+                {/* Descripción */}
                 <div className="col-span-full">
                   <label className="block text-sm font-medium text-slate-800 mb-1">
                     Descripción
                   </label>
                   <textarea
+                    name="descripcion"
                     placeholder="Descripción de la reunión"
-                    value={descripcion}
-                    onChange={(e) => setDescripcion(e.target.value)}
+                    value={formReunion.descripcion}
+                    onChange={handleFormChange}
                     rows="2"
                     className="w-full px-4 py-3 border border-slate-200 rounded-lg text-sm outline-none focus:border-blue-600 focus:ring-2 focus:ring-blue-600/20 box-border resize-y font-inherit transition-all"
                   />
                 </div>
 
-                {/* Sección de invitados */}
+                {/* Invitados */}
                 <div className="col-span-full">
                   <label className="block text-sm font-medium text-slate-800 mb-1">
                     <FaUsers className="inline mr-2" />
                     Invitados * ({invitados.length} seleccionados)
                   </label>
-                  
+
                   <div className="bg-slate-50 rounded-lg p-3 mb-3 flex items-center gap-3">
                     <FaSearch className="text-slate-800 opacity-40" />
                     <input
@@ -444,8 +465,8 @@ export default function SecretariaReuniones() {
                             key={u.id}
                             onClick={() => toggleInvitado(u.id)}
                             className={`flex items-center gap-3 px-3 py-2 rounded-lg cursor-pointer transition-all ${
-                              seleccionado 
-                                ? 'bg-blue-100 border border-blue-600' 
+                              seleccionado
+                                ? 'bg-blue-100 border border-blue-600'
                                 : 'bg-transparent border border-transparent hover:bg-slate-50'
                             }`}
                           >
@@ -511,10 +532,16 @@ export default function SecretariaReuniones() {
         </div>
       )}
 
-      {/* Modal para editar asistentes */}
+      {/* ===== MODAL EDITAR ASISTENTES ===== */}
       {mostrarModalAsistentes && (
-        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4" onClick={cerrarModalAsistentes}>
-          <div className="bg-white rounded-2xl p-8 max-w-lg w-full max-h-[90vh] overflow-y-auto" onClick={(e) => e.stopPropagation()}>
+        <div
+          className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4"
+          onClick={cerrarModalAsistentes}
+        >
+          <div
+            className="bg-white rounded-2xl p-8 max-w-lg w-full max-h-[90vh] overflow-y-auto"
+            onClick={(e) => e.stopPropagation()}
+          >
             <div className="flex justify-between items-center mb-6">
               <div>
                 <h2 className="text-2xl font-bold text-slate-800 m-0">
@@ -557,8 +584,8 @@ export default function SecretariaReuniones() {
                       key={u.id}
                       onClick={() => toggleAsistente(u.id)}
                       className={`flex items-center gap-3 px-3 py-3 rounded-lg cursor-pointer transition-all ${
-                        seleccionado 
-                          ? 'bg-blue-100 border border-blue-600' 
+                        seleccionado
+                          ? 'bg-blue-100 border border-blue-600'
                           : 'bg-transparent border border-transparent hover:bg-slate-50'
                       }`}
                     >

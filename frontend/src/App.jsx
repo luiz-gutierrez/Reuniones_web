@@ -8,12 +8,13 @@ import Login from './pages/Login';
 import AdminInicio from './pages/admin/Inicio';
 import AdminUsuarios from './pages/admin/Usuarios';
 import AdminTareas from './pages/admin/Tareas';
+import AdminReuniones from './pages/admin/ReunionesA';
+
 
 import AsistenteInicio from './pages/asistente/Inicio';
 import AsistenteReuniones from './pages/asistente/Reuniones';
 import AsistenteAgenda from './pages/asistente/Agenda';
 import AsistenteReunionDetalle from './pages/asistente/ReunionDetalle';
-import AsistenteMinutas from './pages/asistente/Minutas';
 
 import GerenteInicio from './pages/gerente/Inicio';
 import GerenteTareas from './pages/gerente/Tareas';
@@ -41,6 +42,7 @@ export default function App() {
             <Route path="/admin/inicio" element={<AdminInicio />} />
             <Route path="/admin/usuarios" element={<AdminUsuarios />} />
             <Route path="/admin/tareas" element={<AdminTareas />} />
+            <Route path="/admin/reuniones" element={<AdminReuniones />} />
           </Route>
         </Route>
 
@@ -51,7 +53,6 @@ export default function App() {
             <Route path="/asistente/reuniones" element={<AsistenteReuniones />} />
             <Route path="/asistente/agenda" element={<AsistenteAgenda />} />
             <Route path="/asistente/reunion-detalle/:id" element={<AsistenteReunionDetalle />} />
-            <Route path="/asistente/minutas/:id" element={<AsistenteMinutas />} />
           </Route>
         </Route>
 

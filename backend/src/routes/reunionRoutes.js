@@ -26,7 +26,7 @@ router.get('/:id', verifyToken, checkRole( 'Admin', 'Secretaria','Gerente','Jefe
 router.put('/:id', verifyToken, checkRole('Secretaria'), actualizarReunion);
 
 // Obtener reuniones del usuario logueado
-router.get('/usuario/:userId', verifyToken, checkRole('Gerente','JefeDepto'), getReunionesByUsuario);
+router.get('/usuario/:userId', verifyToken, checkRole('Admin','Gerente','JefeDepto'), getReunionesByUsuario);
 
 // Obtener detalles de una reunión específic
 
