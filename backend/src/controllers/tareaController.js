@@ -1,7 +1,7 @@
 // controllers/tareaController.js
 import { pool } from '../config/db.js';
 
-// POST /api/tareas - Crear múltiples tareas
+// POST /api/tareas - Crear múltiples tareas (Secretaria)
 async function crearTareas(req, res) {
   const { tareas } = req.body;
 
@@ -58,7 +58,7 @@ async function crearTareas(req, res) {
   }
 }
 
-// GET /api/tareas/reunion/:id - Obtener tareas de una reunión
+// GET /api/tareas/reunion/:id - Obtener tareas de una reunión(Secretaria)
 async function getTareasByReunion(req, res) {
   const { id } = req.params;
 
@@ -90,8 +90,7 @@ async function getTareasByReunion(req, res) {
   }
 }
 
-// ========== NUEVO CONTROLADOR ==========
-// PUT /api/tareas/:id - Actualizar todos los campos de una tarea
+// PUT /api/tareas/:id - Actualizar todos los campos de una tarea(Secretaria)
 async function actualizarTarea(req, res) {
   const { id } = req.params;
   const { tar_nombre, tar_descripcion, tar_fecha, use_id } = req.body;
@@ -137,7 +136,7 @@ async function actualizarTarea(req, res) {
     });
   }
 }
-// DELETE /api/tareas/:id - Eliminar una tarea
+// DELETE /api/tareas/:id - Eliminar una tarea(Secretaria)
 async function eliminarTarea(req, res) {
   const { id } = req.params;
 
@@ -184,7 +183,7 @@ async function eliminarTarea(req, res) {
   }
 }
 
-// GET /api/tareas/usuario/:userId - Obtener tareas de un usuario específico
+// GET /api/tareas/usuario/:userId - Obtener tareas de un usuario específico(Todos)
 async function getTareasByUsuario(req, res) {
   const { userId } = req.params;
 
@@ -238,7 +237,7 @@ async function getTareasByUsuario(req, res) {
     });
   }
 }
-
+// GET /api/tareas/ (Gerente, JefeDepto)
 async function actualizarEstadoTarea(req, res) {
   const { id } = req.params;
   const { tar_estatus } = req.body;
@@ -323,10 +322,9 @@ async function actualizarEstadoTarea(req, res) {
   }
 }
 
-// GET /api/tareas/usuario/:userId/todas - Obtener TODAS las tareas del usuario
+// GET /api/tareas/usuario/:userId/todas - Obtener TODAS las tareas del usuario (Admin)
 async function getTareasByUsuarioAll(req, res) {
   const { userId } = req.params;
-
   try {
     const [rows] = await pool.query(
       `SELECT 
@@ -366,6 +364,62 @@ async function getTareasByUsuarioAll(req, res) {
   }
 }
 
+// Obtener todas las tareas con información relacionada
+async function getTareasAll(req, res) {
+  try {
+    console.log('📋 Obteniendo todas las tareas...');
+
+    const [rows] = await pool.query(
+      `SELECT 
+        t.tar_id,
+        t.tar_nombre,
+        t.tar_descripcion,
+        t.tar_estatus,
+        t.tar_prioridad,
+        t.tar_fecha,
+        t.use_id,
+        t.reu_id,
+        -- Información del usuario asignado
+        u.nombre as usuario_nombre,
+        u.apellido as usuario_apellido,
+        u.telefono as usuario_telefono,
+        u.correo as usuario_correo,
+        -- Información del puesto del usuario
+        p.pue_nombre as usuario_puesto,
+        -- Información del departamento del usuario
+        d.dep_id as departamento_id,
+        d.dep_nombre as departamento_nombre,
+        -- Información de la reunión
+        re.reu_nombre as reunion_titulo,
+        re.reu_descripcion as reunion_descripcion,
+        re.reu_fecha as reunion_fecha
+      FROM tareas t
+      LEFT JOIN users u ON t.use_id = u.id
+      LEFT JOIN puestos p ON u.pue_id = p.pue_id
+      LEFT JOIN departamentos d ON p.dep_id = d.dep_id
+      LEFT JOIN reuniones re ON t.reu_id = re.reu_id
+      ORDER BY t.tar_fecha DESC, t.tar_id DESC`
+    );
+
+    console.log(`✅ Tareas encontradas: ${rows.length}`);
+
+    return res.status(200).json({
+      success: true,
+      count: rows.length,
+      tareas: rows
+    });
+
+  } catch (error) {
+    console.error('❌ Error al obtener tareas:', error);
+    return res.status(500).json({
+      success: false,
+      message: 'Error interno del servidor al obtener las tareas',
+      error: error.message
+    });
+  }
+}
+
+
 
 export {
   crearTareas,
@@ -374,5 +428,6 @@ export {
   eliminarTarea,
   getTareasByUsuario,
   actualizarEstadoTarea,
-  getTareasByUsuarioAll
+  getTareasByUsuarioAll,
+  getTareasAll,
 };
