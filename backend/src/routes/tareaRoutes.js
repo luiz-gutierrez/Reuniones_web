@@ -5,7 +5,8 @@ import {crearTareas,
         eliminarTarea,
         actualizarEstadoTarea,
         getTareasByUsuario,
-        getTareasByUsuarioAll } from '../controllers/tareaController.js';
+        getTareasByUsuarioAll,
+        getTareasAll } from '../controllers/tareaController.js';
 import verifyToken from '../middlewares/auth.js';
 import checkRole from '../middlewares/role.js';
 
@@ -29,6 +30,7 @@ router.put('/:id/estado', verifyToken, checkRole('Gerente','JefeDepto'),actualiz
 // Obtener TODAS las tareas del usuario
 router.get('/usuario/:userId/todas', verifyToken, checkRole('Gerente','JefeDepto'),getTareasByUsuarioAll);
 
-
+// Obtener todas las tareas
+router.get('/', verifyToken, checkRole('Admin', 'Secretaria', 'Gerente'), getTareasAll);
 
 export default router;

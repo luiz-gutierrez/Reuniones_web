@@ -7,6 +7,7 @@ import Login from './pages/Login';
 
 import AdminInicio from './pages/admin/Inicio';
 import AdminUsuarios from './pages/admin/Usuarios';
+import AdminTareas from './pages/admin/Tareas';
 
 import AsistenteInicio from './pages/asistente/Inicio';
 import AsistenteReuniones from './pages/asistente/Reuniones';
@@ -39,6 +40,7 @@ export default function App() {
           <Route element={<MainLayout />}>
             <Route path="/admin/inicio" element={<AdminInicio />} />
             <Route path="/admin/usuarios" element={<AdminUsuarios />} />
+            <Route path="/admin/tareas" element={<AdminTareas />} />
           </Route>
         </Route>
 
