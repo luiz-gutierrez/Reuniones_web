@@ -145,6 +145,7 @@ CREATE TABLE `tareas` (
   `tar_estatus` enum('Iniciar','Proceso','Revision','Finalizado') NOT NULL DEFAULT 'Iniciar',
   `tar_prioridad` enum('baja','media','alta') NOT NULL DEFAULT 'media',
   `tar_fecha` date NOT NULL,
+  `tar_nota` text NOT NULL,
   `use_id` int(11) DEFAULT NULL,
   `reu_id` int(11) DEFAULT NULL,
   `created_at` timestamp NOT NULL DEFAULT current_timestamp(),

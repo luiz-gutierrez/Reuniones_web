@@ -71,6 +71,7 @@ async function getTareasByReunion(req, res) {
         t.tar_fecha,
         t.tar_estatus,
         t.use_id,
+        t.tar_nota,
         u.nombre as usuario_nombre,
         u.apellido as usuario_apellido,
         u.correo as usuario_correo
@@ -209,6 +210,7 @@ async function getTareasByUsuario(req, res) {
         t.tar_fecha,
         t.tar_estatus,
         t.tar_prioridad,
+        t.tar_nota,
         t.use_id,
         u.nombre as usuario_nombre,
         u.apellido as usuario_apellido,
@@ -237,10 +239,11 @@ async function getTareasByUsuario(req, res) {
     });
   }
 }
+
 // GET /api/tareas/ (Gerente, JefeDepto)
 async function actualizarEstadoTarea(req, res) {
   const { id } = req.params;
-  const { tar_estatus } = req.body;
+  const { tar_estatus, tar_nota } = req.body; // ✅ Añadir tar_nota
 
   // Validar que el ID existe
   if (!id) {
@@ -250,12 +253,12 @@ async function actualizarEstadoTarea(req, res) {
     });
   }
 
-  // Validar que el estatus sea válido (solo Iniciar, Proceso, Revisión)
-  const estatusValidos = ['Iniciar', 'Proceso', 'Revision'];
+  // ✅ Actualizar los estados válidos (incluyendo Finalizado)
+  const estatusValidos = ['Iniciar', 'Proceso', 'Revision', 'Finalizado'];
   if (!estatusValidos.includes(tar_estatus)) {
     return res.status(400).json({
       success: false,
-      message: 'Estado inválido. Debe ser: Iniciar, Proceso o Revisión'
+      message: 'Estado inválido. Debe ser: Iniciar, Proceso, Revisión o Finalizado'
     });
   }
 
@@ -273,12 +276,13 @@ async function actualizarEstadoTarea(req, res) {
       });
     }
 
-    // Actualizar el estado
+    // ✅ Corregir: pasar 3 valores para 3 placeholders
     const [result] = await pool.query(
       `UPDATE tareas 
-       SET tar_estatus = ?
+       SET tar_estatus = ?,
+           tar_nota = ?
        WHERE tar_id = ?`,
-      [tar_estatus, id]
+      [tar_estatus, tar_nota || null, id] // ✅ 3 valores para 3 placeholders
     );
 
     if (result.affectedRows === 0) {
@@ -297,6 +301,7 @@ async function actualizarEstadoTarea(req, res) {
         t.tar_fecha,
         t.tar_estatus,
         t.tar_prioridad,
+        t.tar_nota,
         t.use_id,
         u.nombre as usuario_nombre,
         u.apellido as usuario_apellido
@@ -334,6 +339,7 @@ async function getTareasByUsuarioAll(req, res) {
         t.tar_fecha,
         t.tar_estatus,
         t.tar_prioridad,
+        t.tar_nota,
         t.use_id,
         t.update_at,
         u.nombre as usuario_nombre,
@@ -376,6 +382,7 @@ async function getTareasAll(req, res) {
         t.tar_descripcion,
         t.tar_estatus,
         t.tar_prioridad,
+        t.tar_nota,
         t.tar_fecha,
         t.use_id,
         t.reu_id,

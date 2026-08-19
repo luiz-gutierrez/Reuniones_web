@@ -16,11 +16,10 @@ import {
   FaInfoCircle,
   FaUser,
   FaTag,
-  FaPlusCircle,
-  FaMinusCircle
+  FaComment,
+  FaEye
 } from 'react-icons/fa';
 import { MdPending, MdPublishedWithChanges } from 'react-icons/md';
-import { HiOutlineStatusOnline } from 'react-icons/hi';
 
 export default function GerenteTareas() {
   const { user } = useAuth();
@@ -29,7 +28,7 @@ export default function GerenteTareas() {
   const [error, setError] = useState(null);
   const [filtroEstatus, setFiltroEstatus] = useState('pendientes');
   const [actualizando, setActualizando] = useState(null);
-  const [descripcionExpandida, setDescripcionExpandida] = useState({});
+  const [notaExpandida, setNotaExpandida] = useState({});
 
   useEffect(() => {
     if (user?.id) {
@@ -41,6 +40,7 @@ export default function GerenteTareas() {
     try {
       setLoading(true);
       const response = await api.get(`/tareas/usuario/${user.id}/todas`);
+      console.log('📋 Tareas recibidas:', response.data);
       setTareas(response.data);
       setError(null);
     } catch (err) {
@@ -82,9 +82,9 @@ export default function GerenteTareas() {
     }
   };
 
-  // Toggle descripción expandida
-  const toggleDescripcion = (tareaId) => {
-    setDescripcionExpandida(prev => ({
+  // Toggle nota expandida
+  const toggleNota = (tareaId) => {
+    setNotaExpandida(prev => ({
       ...prev,
       [tareaId]: !prev[tareaId]
     }));
@@ -165,48 +165,19 @@ export default function GerenteTareas() {
     });
   };
 
-  // Formatear fecha con hora
-  const formatearFechaHora = (fecha) => {
-    if (!fecha) return '-';
-    const date = new Date(fecha);
-    return date.toLocaleString('es-ES', {
-      day: '2-digit',
-      month: '2-digit',
-      year: 'numeric',
-      hour: '2-digit',
-      minute: '2-digit'
-    });
-  };
-
   // Obtener el título según el filtro
   const getTitulo = () => {
     switch(filtroEstatus) {
       case 'pendientes':
         return 'Mis Tareas Pendientes';
       case 'revision':
-        return 'Tareas en Revision';
+        return 'Tareas en Revisión';
       case 'finalizadas':
         return 'Tareas Finalizadas';
       case 'todas':
         return 'Todas mis Tareas';
       default:
         return 'Mis Tareas';
-    }
-  };
-
-  // Obtener la descripción según el filtro
-  const getDescripcion = () => {
-    switch(filtroEstatus) {
-      case 'pendientes':
-        return 'Tareas que necesitan tu atención';
-      case 'revision':
-        return 'Tareas enviadas para Revision';
-      case 'finalizadas':
-        return 'Tareas completadas exitosamente';
-      case 'todas':
-        return 'Todas tus tareas';
-      default:
-        return '';
     }
   };
 
@@ -241,12 +212,10 @@ export default function GerenteTareas() {
     <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
       {/* Header */}
       <div className="mb-8">
-        <div>
-          <h1 className="text-3xl font-bold text-gray-900 flex items-center gap-3">
-            <FaClipboardList className="text-blue-600 text-4xl" />
-            {getTitulo()}
-          </h1>
-        </div>
+        <h1 className="text-3xl font-bold text-gray-900 flex items-center gap-3">
+          <FaClipboardList className="text-blue-600 text-4xl" />
+          {getTitulo()}
+        </h1>
       </div>
 
       {/* Tarjetas de resumen */}
@@ -281,7 +250,7 @@ export default function GerenteTareas() {
           <div className="flex items-center justify-between">
             <div>
               <p className="text-sm text-gray-500 font-medium flex items-center gap-1">
-                <FaPaperPlane className="text-purple-500" /> En Revision
+                <FaPaperPlane className="text-purple-500" /> En Revisión
               </p>
               <p className="text-3xl font-bold text-purple-600 mt-1">{contarPorEstatus('Revision')}</p>
             </div>
@@ -342,7 +311,7 @@ export default function GerenteTareas() {
             className="px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none bg-white"
           >
             <option value="pendientes">📌 Pendientes</option>
-            <option value="revision">📤 En Revision</option>
+            <option value="revision">📤 En Revisión</option>
             <option value="finalizadas">✅ Finalizadas</option>
             <option value="todas">📊 Todas</option>
           </select>
@@ -354,7 +323,7 @@ export default function GerenteTareas() {
         </span>
       </div>
 
-      {/* Tabla de tareas */}
+      {/* ===== TARJETAS DE TAREAS ===== */}
       {tareasFiltradas.length === 0 ? (
         <div className="bg-white rounded-xl shadow-sm p-12 text-center border border-gray-100">
           <div className="text-6xl mb-4">
@@ -364,7 +333,7 @@ export default function GerenteTareas() {
           </div>
           <h3 className="text-xl font-semibold text-gray-700 mb-2">
             {filtroEstatus === 'pendientes' ? '¡No hay tareas pendientes!' : 
-             filtroEstatus === 'revision' ? 'No hay tareas en Revision' : 
+             filtroEstatus === 'revision' ? 'No hay tareas en Revisión' : 
              filtroEstatus === 'finalizadas' ? 'No hay tareas finalizadas' : 
              'No hay tareas para mostrar'}
           </h3>
@@ -373,130 +342,141 @@ export default function GerenteTareas() {
               ? 'No tienes tareas asignadas actualmente' 
               : 'No se encontraron tareas con los filtros seleccionados'}
           </p>
-          {filtroEstatus !== 'pendientes' && tareas.some(t => t.tar_estatus === 'Iniciar' || t.tar_estatus === 'Proceso') && (
-            <button
-              onClick={() => setFiltroEstatus('pendientes')}
-              className="mt-4 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors flex items-center gap-2 mx-auto"
-            >
-              <FaRocket /> Ver tareas pendientes
-            </button>
-          )}
         </div>
       ) : (
-        <div className="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden">
-          <div className="overflow-x-auto">
-            <table className="w-full">
-              <thead className="bg-gradient-to-r from-gray-50 to-gray-100 border-b border-gray-200">
-                <tr>
-                  <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">#</th>
-                  <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Nombre</th>
-                  <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Descripción</th>
-                  <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">F. Límite</th>
-                  <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Prioridad</th>
-                  <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Estatus</th>
-                  <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Acciones</th>
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-gray-200">
-                {tareasFiltradas.map((tarea) => (
-                  <tr key={tarea.tar_id} className="hover:bg-gray-50 transition-colors">
-                    <td className="px-4 py-4 whitespace-nowrap text-sm font-medium text-gray-500">
-                      #{tarea.tar_id}
-                    </td>
-                    <td className="px-4 py-4">
-                      <div className="text-sm font-semibold text-gray-900">
-                        {tarea.tar_nombre}
-                      </div>
-                    </td>
-                    <td className="px-4 py-4 max-w-xs">
-                      <div className="text-sm text-gray-600">
-                        {tarea.tar_descripcion ? (
-                          <div>
-                            <div className={`${!descripcionExpandida[tarea.tar_id] ? 'line-clamp-2' : ''}`}>
-                              {tarea.tar_descripcion}
-                            </div>
-                            {tarea.tar_descripcion.length > 60 && (
-                              <button
-                                onClick={() => toggleDescripcion(tarea.tar_id)}
-                                className="text-xs text-blue-600 hover:text-blue-800 mt-1 flex items-center gap-1"
-                              >
-                                {descripcionExpandida[tarea.tar_id] ? (
-                                  <>
-                                    <FaChevronUp className="text-xs" /> Ver menos
-                                  </>
-                                ) : (
-                                  <>
-                                    <FaChevronDown className="text-xs" /> Ver más
-                                  </>
-                                )}
-                              </button>
+        <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
+          {tareasFiltradas.map((tarea) => (
+            <div
+              key={tarea.tar_id}
+              className="bg-white rounded-xl shadow-sm border border-gray-200 hover:shadow-lg transition-all hover:-translate-y-1 overflow-hidden"
+            >
+              {/* ===== NOTA EN LA PARTE SUPERIOR ===== */}
+              {tarea.tar_nota && (
+                <div className="bg-blue-50 border-b border-blue-200 px-4 py-3">
+                  <div className="flex items-start gap-2">
+                    <FaComment className="text-blue-600 mt-0.5 flex-shrink-0" size={14} />
+                    <div className="flex-1 min-w-0">
+                      <p className="text-xs font-medium text-blue-700 m-0">📝 Nota:</p>
+                      <div className="text-sm text-gray-700">
+                        <div className={`${!notaExpandida[tarea.tar_id] ? 'line-clamp-2' : ''}`}>
+                          {tarea.tar_nota}
+                        </div>
+                        {tarea.tar_nota.length > 60 && (
+                          <button
+                            onClick={() => toggleNota(tarea.tar_id)}
+                            className="text-xs text-blue-600 hover:text-blue-800 mt-1 flex items-center gap-1"
+                          >
+                            {notaExpandida[tarea.tar_id] ? (
+                              <>
+                                <FaChevronUp className="text-xs" /> Ver menos
+                              </>
+                            ) : (
+                              <>
+                                <FaChevronDown className="text-xs" /> Ver más
+                              </>
                             )}
-                          </div>
-                        ) : (
-                          <span className="text-gray-400 italic">Sin descripción</span>
+                          </button>
                         )}
                       </div>
-                    </td>
-                    <td className="px-4 py-4 whitespace-nowrap">
-                      <div className="flex items-center gap-1 text-sm text-gray-600">
-                        <FaCalendarAlt className="text-blue-400 text-xs" />
-                        {formatearFecha(tarea.tar_fecha)}
+                    </div>
+                  </div>
+                </div>
+              )}
+
+              {/* ===== CONTENIDO DE LA TAREA ===== */}
+              <div className="p-5">
+                {/* Header: Nombre y prioridad */}
+                <div className="flex justify-between items-start mb-3">
+                  <div className="flex-1 min-w-0">
+                    <h3 className="font-semibold text-gray-900 text-base m-0 truncate">
+                      {tarea.tar_nombre}
+                    </h3>
+                    {tarea.reunion_titulo && (
+                      <div className="flex items-center gap-1.5 text-xs text-gray-500 mt-1">
+                        <FaClipboardList size={12} />
+                        <span>Reunión: {tarea.reunion_titulo}</span>
                       </div>
-                    </td>
-                    <td className="px-4 py-4 whitespace-nowrap">
-                      <span className={`inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-medium border ${getPrioridadClase(tarea.tar_prioridad)}`}>
-                        {getPrioridadIcon(tarea.tar_prioridad)}
-                        {tarea.tar_prioridad}
-                      </span>
-                    </td>
-                    <td className="px-4 py-4 whitespace-nowrap">
-                      <span className={`inline-flex items-center px-2.5 py-1 rounded-full text-xs font-medium border ${getEstatusColor(tarea.tar_estatus)}`}>
-                        {getEstatusIcon(tarea.tar_estatus)}
-                        {tarea.tar_estatus}
-                      </span>
-                    </td>
-                    <td className="px-4 py-4 whitespace-nowrap">
-                      {tarea.tar_estatus === 'Iniciar' || tarea.tar_estatus === 'Proceso' ? (
-                        <select
-                          value={tarea.tar_estatus}
-                          onChange={(e) => actualizarEstado(tarea.tar_id, e.target.value)}
-                          disabled={actualizando === tarea.tar_id}
-                          className={`px-3 py-1.5 text-xs rounded-lg border-2 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition-all ${
-                            actualizando === tarea.tar_id 
-                              ? 'opacity-50 cursor-not-allowed bg-gray-100' 
-                              : 'hover:border-blue-400'
-                          } ${
-                            tarea.tar_estatus === 'Iniciar' 
-                              ? 'border-orange-300 bg-orange-50 text-orange-700' 
-                              : 'border-blue-300 bg-blue-50 text-blue-700'
-                          }`}
-                        >
-                          <option value="Iniciar">🚀 Iniciar</option>
-                          <option value="Proceso">🔄 Proceso</option>
-                          <option value="Revision">📤 Revision</option>
-                        </select>
-                      ) : (
-                        <span className="text-xs text-gray-400 italic flex items-center gap-1">
-                          <FaCheckCircle className="text-green-400" />
-                          {tarea.tar_estatus === 'Revision' ? 'En espera de aprobación' : 'Completada'}
-                        </span>
-                      )}
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
-          
-          {/* Pie de tabla */}
-          <div className="bg-gray-50 px-6 py-3 border-t border-gray-200 flex justify-between items-center flex-wrap gap-2">
-            <p className="text-sm text-gray-600 flex items-center gap-1">
-              <FaClipboardList className="text-blue-400" />
-              Mostrando <span className="font-medium">{tareasFiltradas.length}</span> de{' '}
-              <span className="font-medium">{tareas.length}</span> tareas
-            </p>
-            
-          </div>
+                    )}
+                  </div>
+                  <div className="flex flex-col items-end gap-1 ml-2 flex-shrink-0">
+                    <span className={`inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-medium border ${getPrioridadClase(tarea.tar_prioridad)}`}>
+                      {getPrioridadIcon(tarea.tar_prioridad)}
+                      {tarea.tar_prioridad}
+                    </span>
+                    <span className={`inline-flex items-center px-2.5 py-1 rounded-full text-xs font-medium border ${getEstatusColor(tarea.tar_estatus)}`}>
+                      {getEstatusIcon(tarea.tar_estatus)}
+                      {tarea.tar_estatus}
+                    </span>
+                  </div>
+                </div>
+
+                {/* Descripción */}
+                {tarea.tar_descripcion && (
+                  <p className="text-sm text-gray-600 mb-3 line-clamp-2">
+                    {tarea.tar_descripcion}
+                  </p>
+                )}
+
+                {/* Información de usuario y fecha */}
+                <div className="flex flex-wrap gap-3 text-sm border-t border-gray-100 pt-3">
+                  <div className="flex items-center gap-1.5 text-gray-600">
+                    <FaUser className="text-blue-500 text-xs" />
+                    <span className="truncate">
+                      {tarea.usuario_nombre} {tarea.usuario_apellido}
+                    </span>
+                  </div>
+                  
+                  {tarea.usuario_puesto && (
+                    <div className="flex items-center gap-1.5 text-gray-500 text-xs">
+                      <FaTag className="text-gray-400" size={12} />
+                      <span>{tarea.usuario_puesto}</span>
+                    </div>
+                  )}
+                  
+                  <div className="flex items-center gap-1.5 text-gray-500 text-xs ml-auto">
+                    <FaCalendarAlt className="text-gray-400" size={12} />
+                    <span>Límite: {formatearFecha(tarea.tar_fecha)}</span>
+                  </div>
+                </div>
+
+                {/* Acciones */}
+                <div className="mt-4 pt-3 border-t border-gray-100">
+                  {tarea.tar_estatus === 'Iniciar' || tarea.tar_estatus === 'Proceso' ? (
+                    <select
+                      value={tarea.tar_estatus}
+                      onChange={(e) => actualizarEstado(tarea.tar_id, e.target.value)}
+                      disabled={actualizando === tarea.tar_id}
+                      className={`w-full px-3 py-2 text-sm rounded-lg border-2 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition-all ${
+                        actualizando === tarea.tar_id 
+                          ? 'opacity-50 cursor-not-allowed bg-gray-100' 
+                          : 'hover:border-blue-400'
+                      } ${
+                        tarea.tar_estatus === 'Iniciar' 
+                          ? 'border-orange-300 bg-orange-50 text-orange-700' 
+                          : 'border-blue-300 bg-blue-50 text-blue-700'
+                      }`}
+                    >
+                      <option value="Iniciar">🚀 Iniciar</option>
+                      <option value="Proceso">🔄 Proceso</option>
+                      <option value="Revision">📤 Revisión</option>
+                    </select>
+                  ) : (
+                    <div className="text-center text-sm text-gray-500 flex items-center justify-center gap-2">
+                      <FaCheckCircle className="text-green-400" />
+                      {tarea.tar_estatus === 'Revision' 
+                        ? 'En espera de aprobación' 
+                        : '✅ Tarea completada'}
+                    </div>
+                  )}
+                </div>
+
+                {/* ID de la tarea */}
+                <div className="mt-2 text-xs text-gray-400 text-right">
+                  ID: #{tarea.tar_id}
+                </div>
+              </div>
+            </div>
+          ))}
         </div>
       )}
     </div>
