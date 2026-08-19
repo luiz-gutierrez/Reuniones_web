@@ -42,9 +42,13 @@ const MENUS = {
   Admin: [
     { to: '/admin/inicio', label: 'Inicio' },
     { to: '/admin/usuarios', label: 'Usuarios' },
+<<<<<<< HEAD
     { to: '/admin/tareas', label: 'Tareas' },
     { to: '/admin/reuniones', label: 'Reuniones' }
 
+=======
+    { to: '/admin/tareas', label: 'Tareas' }
+>>>>>>> b7e223894a20e5524b6d7106a4ba5b75da51baf2
   ],
   Secretaria: [
     { to: '/asistente/inicio', label: 'Inicio' },

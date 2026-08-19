@@ -8,8 +8,11 @@ import Login from './pages/Login';
 import AdminInicio from './pages/admin/Inicio';
 import AdminUsuarios from './pages/admin/Usuarios';
 import AdminTareas from './pages/admin/Tareas';
+<<<<<<< HEAD
 import AdminReuniones from './pages/admin/ReunionesA';
 
+=======
+>>>>>>> b7e223894a20e5524b6d7106a4ba5b75da51baf2
 
 import AsistenteInicio from './pages/asistente/Inicio';
 import AsistenteReuniones from './pages/asistente/Reuniones';
@@ -42,7 +45,10 @@ export default function App() {
             <Route path="/admin/inicio" element={<AdminInicio />} />
             <Route path="/admin/usuarios" element={<AdminUsuarios />} />
             <Route path="/admin/tareas" element={<AdminTareas />} />
+<<<<<<< HEAD
             <Route path="/admin/reuniones" element={<AdminReuniones />} />
+=======
+>>>>>>> b7e223894a20e5524b6d7106a4ba5b75da51baf2
           </Route>
         </Route>
 
