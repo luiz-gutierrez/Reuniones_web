@@ -25,6 +25,7 @@ const ICONOS_MENU = {
   'Inicio': <FaHome className="text-lg" />,
   'Usuarios': <FaUsers className="text-lg" />,
   'Tareas': <FaTasks className="text-lg" />,
+  'Mis tareas': <FaTasks className="text-lg" />,
   'Reuniones': <FaCalendarAlt className="text-lg" />,
   'Agenda': <FaClipboardList className="text-lg" />,
 };

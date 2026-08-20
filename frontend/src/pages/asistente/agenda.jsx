@@ -1,5 +1,5 @@
-// src/pages/Agenda.jsx
-import { useEffect, useState } from 'react';
+// src/pages/Agenda.jsx - Versión corregida del calendario
+import { useEffect, useState, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import api from '../../api/axios';
 import {
@@ -15,7 +15,13 @@ import {
   FaPlus,
   FaSave,
   FaUserPlus,
-  FaCheck
+  FaCheck,
+  FaChevronLeft,
+  FaChevronRight as FaChevronRightIcon,
+  FaCalendarDay,
+  FaList,
+  FaArrowLeft,
+  FaArrowRight
 } from 'react-icons/fa';
 
 const COLORS = {
@@ -34,7 +40,11 @@ export default function Agenda() {
   const [error, setError] = useState('');
   const [filtroCategoria, setFiltroCategoria] = useState('todas');
   const [busqueda, setBusqueda] = useState('');
+  const [vista, setVista] = useState('calendario');
+  const [fechaActual, setFechaActual] = useState(new Date());
+  const [reunionesPorFecha, setReunionesPorFecha] = useState({});
   const navigate = useNavigate();
+  const scrollContainerRef = useRef(null);
 
   // Datos de la reunión
   const [nombre, setNombre] = useState('');
@@ -58,9 +68,24 @@ export default function Agenda() {
   const [busquedaAsistente, setBusquedaAsistente] = useState('');
   const [usuarios, setUsuarios] = useState([]);
 
+  // Detectar si es móvil
+  const [esMovil, setEsMovil] = useState(window.innerWidth < 768);
+
   useEffect(() => {
     cargarReuniones();
     cargarUsuarios();
+  }, []);
+
+  useEffect(() => {
+    organizarReunionesPorFecha();
+  }, [reuniones]);
+
+  useEffect(() => {
+    const handleResize = () => {
+      setEsMovil(window.innerWidth < 768);
+    };
+    window.addEventListener('resize', handleResize);
+    return () => window.removeEventListener('resize', handleResize);
   }, []);
 
   async function cargarReuniones() {
@@ -86,12 +111,109 @@ export default function Agenda() {
     }
   }
 
-  // Abrir modal de creación
-  const abrirModalCrear = () => {
+  // ========== FUNCIONES DE CALENDARIO ==========
+  const organizarReunionesPorFecha = () => {
+    const porFecha = {};
+    reuniones.forEach(reunion => {
+      let fechaKey = reunion.reu_fecha;
+      if (fechaKey && fechaKey.includes('T')) {
+        fechaKey = fechaKey.split('T')[0];
+      }
+      
+      if (!porFecha[fechaKey]) {
+        porFecha[fechaKey] = [];
+      }
+      porFecha[fechaKey].push(reunion);
+    });
+    
+    setReunionesPorFecha(porFecha);
+  };
+
+  const cambiarMes = (direccion) => {
+    const nuevaFecha = new Date(fechaActual);
+    nuevaFecha.setMonth(nuevaFecha.getMonth() + direccion);
+    setFechaActual(nuevaFecha);
+  };
+
+  const irHoy = () => {
+    setFechaActual(new Date());
+  };
+
+  const scrollIzquierda = () => {
+    if (scrollContainerRef.current) {
+      scrollContainerRef.current.scrollBy({ left: -300, behavior: 'smooth' });
+    }
+  };
+
+  const scrollDerecha = () => {
+    if (scrollContainerRef.current) {
+      scrollContainerRef.current.scrollBy({ left: 300, behavior: 'smooth' });
+    }
+  };
+
+  const obtenerDiasMes = () => {
+    const año = fechaActual.getFullYear();
+    const mes = fechaActual.getMonth();
+    
+    // Obtener el primer día del mes
+    const primerDia = new Date(año, mes, 1);
+    // Obtener el día de la semana del primer día (0 = Domingo, 1 = Lunes, etc.)
+    const diaInicioSemana = primerDia.getDay();
+    // Obtener el último día del mes
+    const ultimoDia = new Date(año, mes + 1, 0);
+    const totalDiasMes = ultimoDia.getDate();
+    
+    // Calcular cuántos días se necesitan para completar la primera semana
+    const diasPrimeraSemana = diaInicioSemana === 0 ? 7 : diaInicioSemana;
+    
+    // Calcular el total de días a mostrar (máximo 42 para 6 semanas)
+    const totalDiasMostrar = Math.ceil((diaInicioSemana + totalDiasMes) / 7) * 7;
+    
+    const dias = [];
+    
+    for (let i = 0; i < totalDiasMostrar; i++) {
+      const numeroDia = i - diaInicioSemana + 1;
+      const fecha = new Date(año, mes, numeroDia);
+      const esMesActual = fecha.getMonth() === mes;
+      const fechaStr = fecha.toISOString().split('T')[0];
+      
+      const reunionesDelDia = reunionesPorFecha[fechaStr] || [];
+      
+      dias.push({
+        fecha,
+        fechaStr,
+        esMesActual,
+        esHoy: fecha.toDateString() === new Date().toDateString(),
+        reuniones: reunionesDelDia,
+        dia: numeroDia
+      });
+    }
+    
+    return dias;
+  };
+
+  const obtenerNombreMes = () => {
+    return fechaActual.toLocaleDateString('es-ES', { 
+      year: 'numeric', 
+      month: 'long' 
+    });
+  };
+
+  // ========== FUNCIONES DE ABRIR MODAL CON FECHA ==========
+  const abrirModalCrearConFecha = (fechaSeleccionada = null) => {
+    let fechaFormateada = '';
+    if (fechaSeleccionada) {
+      if (fechaSeleccionada instanceof Date) {
+        fechaFormateada = fechaSeleccionada.toISOString().split('T')[0];
+      } else if (typeof fechaSeleccionada === 'string') {
+        fechaFormateada = fechaSeleccionada.split('T')[0];
+      }
+    }
+    
     setNombre('');
     setDescripcion('');
     setLugar('');
-    setFecha('');
+    setFecha(fechaFormateada);
     setHora('');
     setInvitados([]);
     setBusquedaUsuario('');
@@ -99,7 +221,10 @@ export default function Agenda() {
     setMostrarModalCrear(true);
   };
 
-  // Cerrar modal de creación
+  const abrirModalCrear = () => {
+    abrirModalCrearConFecha(null);
+  };
+
   const cerrarModalCrear = () => {
     setMostrarModalCrear(false);
     setNombre('');
@@ -112,7 +237,6 @@ export default function Agenda() {
     setError('');
   };
 
-  // Toggle selección de invitado
   const toggleInvitado = (userId) => {
     setInvitados(prev => {
       if (prev.includes(userId)) {
@@ -123,13 +247,11 @@ export default function Agenda() {
     });
   };
 
-  // Crear reunión con invitados
   async function handleCrear(e) {
     e.preventDefault();
     setGuardando(true);
     setError('');
 
-    // Validar que haya al menos 2 invitados
     if (invitados.length < 2) {
       setError('Debes seleccionar al menos 2 invitados para la reunión');
       setGuardando(false);
@@ -147,8 +269,6 @@ export default function Agenda() {
       });
 
       console.log('✅ Reunión creada:', response.data);
-
-      // Limpiar y cerrar modal
       cerrarModalCrear();
       await cargarReuniones();
 
@@ -161,7 +281,6 @@ export default function Agenda() {
     }
   }
 
-  // Toggle selección de usuario en el modal
   const toggleAsistente = (userId) => {
     setAsistentesSeleccionados(prev => {
       if (prev.includes(userId)) {
@@ -347,7 +466,6 @@ export default function Agenda() {
 
   const conteos = contarPorCategoria();
 
-  // Filtrar usuarios para el modal
   const usuariosFiltrados = usuarios.filter(u =>
     u.nombre.toLowerCase().includes(busquedaUsuario.toLowerCase()) ||
     u.apellido.toLowerCase().includes(busquedaUsuario.toLowerCase()) ||
@@ -360,7 +478,169 @@ export default function Agenda() {
     u.correo.toLowerCase().includes(busquedaAsistente.toLowerCase())
   );
 
-  // Renderizar tarjeta de reunión
+  // ========== RENDER CALENDARIO CORREGIDO ==========
+  const renderCalendario = () => {
+    const dias = obtenerDiasMes();
+    const nombresDias = ['Dom', 'Lun', 'Mar', 'Mié', 'Jue', 'Vie', 'Sáb'];
+
+    // Agrupar días por semanas
+    const semanas = [];
+    for (let i = 0; i < dias.length; i += 7) {
+      semanas.push(dias.slice(i, i + 7));
+    }
+
+    return (
+      <div className="bg-white rounded-2xl shadow-md overflow-hidden">
+        {/* Header del calendario */}
+        <div className="bg-gradient-to-r from-blue-600 to-blue-700 p-3 sm:p-4 flex justify-between items-center flex-wrap gap-2">
+          <h2 className="text-white text-lg sm:text-xl font-bold m-0 capitalize">
+            {obtenerNombreMes()}
+          </h2>
+          <div className="flex items-center gap-1 sm:gap-2">
+            <button
+              onClick={() => cambiarMes(-1)}
+              className="bg-white/20 text-white border-none rounded-lg p-1.5 sm:p-2 cursor-pointer hover:bg-white/30 transition-all"
+            >
+              <FaChevronLeft size={esMovil ? 14 : 16} />
+            </button>
+            <button
+              onClick={irHoy}
+              className="bg-white text-blue-600 border-none rounded-lg px-3 sm:px-4 py-1.5 sm:py-2 text-xs sm:text-sm font-medium cursor-pointer hover:bg-blue-50 transition-all whitespace-nowrap"
+            >
+              Hoy
+            </button>
+            <button
+              onClick={() => cambiarMes(1)}
+              className="bg-white/20 text-white border-none rounded-lg p-1.5 sm:p-2 cursor-pointer hover:bg-white/30 transition-all"
+            >
+              <FaChevronRightIcon size={esMovil ? 14 : 16} />
+            </button>
+          </div>
+        </div>
+
+        {/* Tabla del calendario */}
+        <div className="p-2 sm:p-4">
+          {/* Días de la semana */}
+          <div className="grid grid-cols-7 gap-1 mb-2">
+            {nombresDias.map(nombre => (
+              <div key={nombre} className="text-center text-xs sm:text-sm font-medium text-slate-800 opacity-60 p-1 sm:p-2">
+                {esMovil ? nombre.substring(0, 3) : nombre}
+              </div>
+            ))}
+          </div>
+
+          {/* Semanas */}
+          {semanas.map((semana, semanaIndex) => (
+            <div key={semanaIndex} className="grid grid-cols-7 gap-1 mb-1">
+              {semana.map((dia, diaIndex) => {
+                // Aplicar filtros a las reuniones del día
+                let reunionesDelDia = dia.reuniones;
+                
+                if (busqueda.trim()) {
+                  const busquedaLower = busqueda.toLowerCase();
+                  reunionesDelDia = reunionesDelDia.filter(r =>
+                    r.reu_nombre.toLowerCase().includes(busquedaLower) ||
+                    (r.reu_descripcion && r.reu_descripcion.toLowerCase().includes(busquedaLower)) ||
+                    (r.reu_lugar && r.reu_lugar.toLowerCase().includes(busquedaLower)) ||
+                    (r.creado_por_nombre && r.creado_por_nombre.toLowerCase().includes(busquedaLower))
+                  );
+                }
+                
+                if (filtroCategoria !== 'todas') {
+                  const hoyStr = new Date().toISOString().split('T')[0];
+                  const fechaStr = dia.fechaStr;
+                  
+                  if (filtroCategoria === 'hoy') {
+                    reunionesDelDia = reunionesDelDia.filter(r => fechaStr === hoyStr);
+                  } else if (filtroCategoria === 'proximas') {
+                    reunionesDelDia = reunionesDelDia.filter(r => fechaStr > hoyStr);
+                  } else if (filtroCategoria === 'pasadas') {
+                    reunionesDelDia = reunionesDelDia.filter(r => fechaStr < hoyStr);
+                  }
+                }
+                
+                return (
+                  <div
+                    key={diaIndex}
+                    className={`
+                      border rounded-lg p-1 sm:p-2 relative transition-all
+                      ${dia.esMesActual 
+                        ? 'border-slate-200 bg-white hover:bg-slate-50' 
+                        : 'border-slate-100 bg-slate-50/50'
+                      }
+                      ${dia.esHoy ? 'ring-2 ring-blue-600 ring-offset-1' : ''}
+                      min-h-[80px] sm:min-h-[100px]
+                    `}
+                  >
+                    <div className="flex justify-between items-start">
+                      <span className={`text-xs sm:text-sm font-medium ${
+                        dia.esMesActual ? 'text-slate-800' : 'text-slate-400'
+                      }`}>
+                        {dia.dia > 0 ? dia.dia : ''}
+                      </span>
+                      {dia.esHoy && (
+                        <span className="bg-blue-600 text-white text-[8px] sm:text-xs rounded-full px-1.5 sm:px-2 py-0.5">
+                          Hoy
+                        </span>
+                      )}
+                    </div>
+
+                    {/* Reuniones del día */}
+                    <div className="space-y-0.5 sm:space-y-1 mt-1">
+                      {reunionesDelDia.slice(0, esMovil ? 2 : 3).map((reunion, idx) => {
+                        const pasada = esReunionPasada(reunion.reu_fecha, reunion.reu_hora);
+                        return (
+                          <div
+                            key={idx}
+                            className={`text-[8px] sm:text-xs rounded px-1 sm:px-1.5 py-0.5 truncate cursor-pointer transition-all ${
+                              pasada 
+                                ? 'bg-gray-100 text-gray-500 hover:bg-gray-200' 
+                                : 'bg-blue-100 text-blue-800 hover:bg-blue-200'
+                            }`}
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              verDetalles(reunion.reu_id);
+                            }}
+                            title={`${reunion.reu_hora} - ${reunion.reu_nombre}`}
+                          >
+                            {esMovil ? (
+                              <span className="font-medium">{reunion.reu_hora}</span>
+                            ) : (
+                              <>{reunion.reu_hora} - {reunion.reu_nombre}</>
+                            )}
+                          </div>
+                        );
+                      })}
+                      {reunionesDelDia.length > (esMovil ? 2 : 3) && (
+                        <div className="text-[7px] sm:text-xs text-slate-500">
+                          +{reunionesDelDia.length - (esMovil ? 2 : 3)} más
+                        </div>
+                      )}
+                    </div>
+
+                    {/* Botón para agregar reunión */}
+                    {dia.esMesActual && dia.dia > 0 && (
+                      <button
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          abrirModalCrearConFecha(dia.fecha);
+                        }}
+                        className="absolute bottom-0.5 right-0.5 sm:bottom-1 sm:right-1 w-5 h-5 sm:w-6 sm:h-6 bg-blue-600 text-white rounded-full border-none text-[8px] sm:text-xs cursor-pointer hover:bg-blue-700 transition-all flex items-center justify-center"
+                      >
+                        <FaPlus size={esMovil ? 8 : 10} />
+                      </button>
+                    )}
+                  </div>
+                );
+              })}
+            </div>
+          ))}
+        </div>
+      </div>
+    );
+  };
+
+  // ========== RENDER LISTA ==========
   const renderReunionCard = (reunion) => {
     const pasada = esReunionPasada(reunion.reu_fecha, reunion.reu_hora);
     const fechaRelativa = formatearFechaRelativa(reunion.reu_fecha);
@@ -372,14 +652,8 @@ export default function Agenda() {
       <div
         key={reunion.reu_id}
         onClick={() => verDetalles(reunion.reu_id)}
-        className="bg-white rounded-2xl p-6 shadow-md hover:shadow-xl transition-all duration-300 cursor-pointer mb-4 relative"
+        className="bg-white rounded-2xl p-4 sm:p-6 shadow-md hover:shadow-xl transition-all duration-300 cursor-pointer mb-4 relative"
         style={{ borderLeft: `4px solid ${borderColor}`, opacity: pasada ? 0.7 : 1 }}
-        onMouseEnter={(e) => {
-          e.currentTarget.style.transform = 'translateX(4px)';
-        }}
-        onMouseLeave={(e) => {
-          e.currentTarget.style.transform = 'translateX(0)';
-        }}
       >
         <div className="flex flex-wrap gap-2 mb-3">
           {pasada && (
@@ -403,28 +677,28 @@ export default function Agenda() {
           )}
         </div>
 
-        <h3 className="text-lg font-semibold text-gray-800 mb-2">
+        <h3 className="text-base sm:text-lg font-semibold text-gray-800 mb-2">
           {reunion.reu_nombre}
         </h3>
 
         <div className="flex flex-col gap-2">
-          <div className="flex items-center gap-2 text-gray-700 text-sm">
+          <div className="flex items-center gap-2 text-gray-700 text-xs sm:text-sm">
             <FaCalendarAlt className="text-blue-600 text-sm" />
             <span>{formatearFecha(reunion.reu_fecha)}</span>
           </div>
 
-          <div className="flex items-center gap-2 text-gray-700 text-sm">
+          <div className="flex items-center gap-2 text-gray-700 text-xs sm:text-sm">
             <FaClock className="text-blue-600 text-sm" />
             <span>{reunion.reu_hora}</span>
           </div>
 
-          <div className="flex items-center gap-2 text-gray-700 text-sm">
+          <div className="flex items-center gap-2 text-gray-700 text-xs sm:text-sm">
             <FaMapMarkerAlt className="text-blue-600 text-sm" />
             <span>{reunion.reu_lugar || 'Sin lugar definido'}</span>
           </div>
 
           {reunion.reu_descripcion && (
-            <p className="text-sm text-gray-600 opacity-60 mt-1 mb-0 line-clamp-2">
+            <p className="text-xs sm:text-sm text-gray-600 opacity-60 mt-1 mb-0 line-clamp-2">
               {reunion.reu_descripcion}
             </p>
           )}
@@ -441,43 +715,92 @@ export default function Agenda() {
     );
   };
 
+  const renderLista = () => {
+    return (
+      <div>
+        {reunionesFinales.length === 0 ? (
+          <div className="text-center py-16 bg-white rounded-2xl shadow-md">
+            <div className="text-6xl mb-4">📭</div>
+            <h2 className="text-xl sm:text-2xl text-gray-800 m-0">
+              No hay reuniones {filtroCategoria === 'hoy' ? 'para hoy' :
+                filtroCategoria === 'proximas' ? 'próximas' :
+                filtroCategoria === 'pasadas' ? 'anteriores' : 'programadas'}
+            </h2>
+            <p className="text-gray-600 opacity-60 mt-2 text-sm sm:text-base">
+              {busqueda ? 'No se encontraron reuniones que coincidan con tu búsqueda' :
+                filtroCategoria === 'hoy' ? 'Disfruta tu día sin reuniones' :
+                'Pronto se programarán nuevas reuniones'}
+            </p>
+          </div>
+        ) : (
+          <div>
+            {filtroCategoria === 'todas' ? (
+              Object.entries(agruparPorFecha(reunionesFinales))
+                .sort((a, b) => a[0].localeCompare(b[0]))
+                .map(([fecha, reunionesDelDia]) => {
+                  const fechaRelativa = formatearFechaRelativa(fecha);
+
+                  return (
+                    <div key={fecha} className="mb-8">
+                      <div className="flex items-center gap-3 mb-4 flex-wrap">
+                        <h2 className="text-lg sm:text-xl font-semibold text-gray-800 m-0">
+                          {formatearFecha(fecha)}
+                        </h2>
+                        {fechaRelativa && (
+                          <span
+                            className="px-3 py-1 rounded-full text-xs font-medium"
+                            style={{ backgroundColor: fechaRelativa.color + '20', color: fechaRelativa.color }}
+                          >
+                            {fechaRelativa.label}
+                          </span>
+                        )}
+                        <span className="bg-gray-100 text-gray-600 px-3 py-1 rounded-full text-xs opacity-60">
+                          {reunionesDelDia.length} reuniones
+                        </span>
+                      </div>
+                      {reunionesDelDia.map(r => renderReunionCard(r))}
+                    </div>
+                  );
+                })
+            ) : (
+              reunionesFinales.map(r => renderReunionCard(r))
+            )}
+          </div>
+        )}
+      </div>
+    );
+  };
+
   return (
-    <div className="p-6 max-w-6xl mx-auto">
+    <div className="p-3 sm:p-6 max-w-6xl mx-auto">
       {/* Header */}
-      <div className="flex justify-between items-center flex-wrap gap-4 mb-6">
+      <div className="flex justify-between items-center flex-wrap gap-3 sm:gap-4 mb-4 sm:mb-6">
         <div>
-          <h1 className="text-3xl font-bold text-gray-800 m-0">
+          <h1 className="text-2xl sm:text-3xl font-bold text-gray-800 m-0">
             📅 Agenda
           </h1>
-          <p className="text-gray-600 opacity-60 m-0 mt-1">
+          <p className="text-gray-600 opacity-60 m-0 mt-1 text-sm sm:text-base">
             Visualiza todas tus reuniones organizadas por fecha
           </p>
         </div>
-        <div className="flex gap-3">
+        <div className="flex gap-2 sm:gap-3 flex-wrap">
           <button
             onClick={abrirModalCrear}
-            className="bg-blue-600 text-white border-none rounded-xl px-6 py-3 cursor-pointer flex items-center gap-2 font-medium transition-all hover:scale-105 hover:shadow-lg hover:shadow-blue-600/40 shadow-md shadow-blue-600/30"
+            className="bg-blue-600 text-white border-none rounded-xl px-4 sm:px-6 py-2 sm:py-3 cursor-pointer flex items-center gap-2 font-medium transition-all hover:scale-105 hover:shadow-lg hover:shadow-blue-600/40 shadow-md shadow-blue-600/30 text-sm sm:text-base"
           >
-            <FaPlus /> Nueva Reunión
-          </button>
-          <button
-            onClick={cargarReuniones}
-            className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg text-sm transition-all duration-200"
-          >
-            Actualizar
+            <FaPlus size={esMovil ? 12 : 16} /> Nueva Reunión
           </button>
         </div>
       </div>
 
-      {/* Filtros y buscador en una sola fila */}
-      <div className="flex flex-col sm:flex-row gap-4 mb-6">
-        {/* Select de filtros */}
-        <div className="flex items-center gap-2 bg-white rounded-xl px-4 py-2 shadow-sm border border-gray-200">
-          <span className="text-gray-500 text-sm font-medium">Filtrar por:</span>
+      {/* Filtros, buscador y controles de vista */}
+      <div className="flex flex-col sm:flex-row gap-3 sm:gap-4 mb-4 sm:mb-6">
+        <div className="flex items-center gap-2 bg-white rounded-xl px-3 sm:px-4 py-2 shadow-sm border border-gray-200">
+          <span className="text-gray-500 text-xs sm:text-sm font-medium">Filtrar:</span>
           <select
             value={filtroCategoria}
             onChange={(e) => setFiltroCategoria(e.target.value)}
-            className="border-none outline-none text-sm font-medium text-gray-700 bg-transparent cursor-pointer py-1 pr-8"
+            className="border-none outline-none text-xs sm:text-sm font-medium text-gray-700 bg-transparent cursor-pointer py-1 pr-6 sm:pr-8"
             style={{
               appearance: 'none',
               backgroundImage: `url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath fill='%236B7280' d='M6 8L1 3h10z'/%3E%3C/svg%3E")`,
@@ -493,15 +816,14 @@ export default function Agenda() {
           </select>
         </div>
 
-        {/* Buscador */}
-        <div className="flex-1 bg-white rounded-xl px-4 py-2 shadow-sm flex items-center gap-3 border border-gray-200">
-          <FaSearch className="text-gray-400" />
+        <div className="flex-1 bg-white rounded-xl px-3 sm:px-4 py-2 shadow-sm flex items-center gap-2 sm:gap-3 border border-gray-200">
+          <FaSearch className="text-gray-400 text-sm" />
           <input
             type="text"
-            placeholder="Buscar reuniones por nombre, lugar, creador..."
+            placeholder="Buscar reuniones..."
             value={busqueda}
             onChange={(e) => setBusqueda(e.target.value)}
-            className="flex-1 border-none outline-none text-sm text-gray-800 bg-transparent"
+            className="flex-1 border-none outline-none text-xs sm:text-sm text-gray-800 bg-transparent"
           />
           {busqueda && (
             <button
@@ -511,6 +833,29 @@ export default function Agenda() {
               <FaTimes />
             </button>
           )}
+        </div>
+
+        <div className="bg-white rounded-xl shadow-sm p-1 flex border border-gray-200">
+          <button
+            onClick={() => setVista('calendario')}
+            className={`px-3 sm:px-4 py-1.5 sm:py-2 rounded-lg border-none cursor-pointer font-medium text-xs sm:text-sm transition-all flex items-center gap-1 sm:gap-2 ${
+              vista === 'calendario'
+                ? 'bg-blue-600 text-white shadow-md'
+                : 'bg-transparent text-gray-700 hover:bg-gray-50'
+            }`}
+          >
+            <FaCalendarDay /> {esMovil ? 'Calendario' : 'Calendario'}
+          </button>
+          <button
+            onClick={() => setVista('lista')}
+            className={`px-3 sm:px-4 py-1.5 sm:py-2 rounded-lg border-none cursor-pointer font-medium text-xs sm:text-sm transition-all flex items-center gap-1 sm:gap-2 ${
+              vista === 'lista'
+                ? 'bg-blue-600 text-white shadow-md'
+                : 'bg-transparent text-gray-700 hover:bg-gray-50'
+            }`}
+          >
+            <FaList /> {esMovil ? 'Lista' : 'Lista'}
+          </button>
         </div>
       </div>
 
@@ -529,67 +874,19 @@ export default function Agenda() {
         </div>
       )}
 
-      {/* Lista de reuniones */}
+      {/* Contenido */}
       {!cargando && !error && (
         <>
-          {reunionesFinales.length === 0 ? (
-            <div className="text-center py-16 bg-white rounded-2xl shadow-md">
-              <div className="text-6xl mb-4">📭</div>
-              <h2 className="text-2xl text-gray-800 m-0">
-                No hay reuniones {filtroCategoria === 'hoy' ? 'para hoy' :
-                  filtroCategoria === 'proximas' ? 'próximas' :
-                    filtroCategoria === 'pasadas' ? 'anteriores' : 'programadas'}
-              </h2>
-              <p className="text-gray-600 opacity-60 mt-2">
-                {busqueda ? 'No se encontraron reuniones que coincidan con tu búsqueda' :
-                  filtroCategoria === 'hoy' ? 'Disfruta tu día sin reuniones' :
-                    'Pronto se programarán nuevas reuniones'}
-              </p>
-            </div>
-          ) : (
-            <div>
-              {filtroCategoria === 'todas' ? (
-                Object.entries(agruparPorFecha(reunionesFinales))
-                  .sort((a, b) => a[0].localeCompare(b[0]))
-                  .map(([fecha, reunionesDelDia]) => {
-                    const fechaRelativa = formatearFechaRelativa(fecha);
-
-                    return (
-                      <div key={fecha} className="mb-8">
-                        <div className="flex items-center gap-3 mb-4">
-                          <h2 className="text-xl font-semibold text-gray-800 m-0">
-                            {formatearFecha(fecha)}
-                          </h2>
-                          {fechaRelativa && (
-                            <span
-                              className="px-3 py-1 rounded-full text-xs font-medium"
-                              style={{ backgroundColor: fechaRelativa.color + '20', color: fechaRelativa.color }}
-                            >
-                              {fechaRelativa.label}
-                            </span>
-                          )}
-                          <span className="bg-gray-100 text-gray-600 px-3 py-1 rounded-full text-xs opacity-60">
-                            {reunionesDelDia.length} reuniones
-                          </span>
-                        </div>
-                        {reunionesDelDia.map(r => renderReunionCard(r))}
-                      </div>
-                    );
-                  })
-              ) : (
-                reunionesFinales.map(r => renderReunionCard(r))
-              )}
-            </div>
-          )}
+          {vista === 'calendario' ? renderCalendario() : renderLista()}
         </>
       )}
 
       {/* Modal para crear reunión */}
       {mostrarModalCrear && (
         <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4" onClick={cerrarModalCrear}>
-          <div className="bg-white rounded-2xl p-8 max-w-2xl w-full max-h-[90vh] overflow-y-auto" onClick={(e) => e.stopPropagation()}>
+          <div className="bg-white rounded-2xl p-4 sm:p-8 max-w-2xl w-full max-h-[90vh] overflow-y-auto" onClick={(e) => e.stopPropagation()}>
             <div className="flex justify-between items-center mb-6">
-              <h2 className="text-2xl font-bold text-gray-800 m-0">
+              <h2 className="text-xl sm:text-2xl font-bold text-gray-800 m-0">
                 <FaUserPlus className="inline mr-2" />
                 Nueva Reunión
               </h2>
@@ -670,7 +967,6 @@ export default function Agenda() {
                   />
                 </div>
 
-                {/* Sección de invitados */}
                 <div className="col-span-full">
                   <label className="block text-sm font-medium text-gray-800 mb-1">
                     <FaUsers className="inline mr-2" />
