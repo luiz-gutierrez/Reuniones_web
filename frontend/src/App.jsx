@@ -8,13 +8,15 @@ import Login from './pages/Login';
 import AdminInicio from './pages/admin/Inicio';
 import AdminUsuarios from './pages/admin/Usuarios';
 import AdminTareas from './pages/admin/Tareas';
-import AdminReuniones from './pages/admin/ReunionesA';
+import ReunionesAdm from './pages/admin/ReunionesAdm';
+import ReunionDetalleAdm from './pages/admin/ReunionDetalleAdm'
 
 import AsistenteInicio from './pages/asistente/Inicio';
 import AsistenteReuniones from './pages/asistente/Reuniones';
 import AsistenteAgenda from './pages/asistente/Agenda';
 import AsistenteReunionDetalle from './pages/asistente/ReunionDetalle';
-import AsistenteTareasRevision from './pages/asistente/TareasRevision';
+import AsistenteRevisionTareas from './pages/asistente/RevisionTareas';
+import AsistenteTareas from './pages/asistente/Tareas';
 
 import GerenteInicio from './pages/gerente/Inicio';
 import GerenteTareas from './pages/gerente/Tareas';
@@ -23,7 +25,7 @@ import ReunionDetalle from './pages/gerente/ReunionDetalle';
 
 
 import JefeDeptoInicio from './pages/jefe_depto/Inicio';
-import Tareas from './pages/jefe_depto/Tareas';
+import JefeDeptoTareas from './pages/jefe_depto/Tareas';
 import ReunionesJD from './pages/jefe_depto/ReunionesJD';
 import ReunionDetalleJD from './pages/jefe_depto/ReunionDetalleJD';
 
@@ -42,7 +44,8 @@ export default function App() {
             <Route path="/admin/inicio" element={<AdminInicio />} />
             <Route path="/admin/usuarios" element={<AdminUsuarios />} />
             <Route path="/admin/tareas" element={<AdminTareas />} />
-            <Route path="/admin/reuniones" element={<AdminReuniones />} />
+            <Route path="/admin/reuniones" element={<ReunionesAdm />} />
+            <Route path="/admin/reunion/:id" element={<ReunionDetalleAdm />} />
           </Route>
         </Route>
 
@@ -53,8 +56,8 @@ export default function App() {
             <Route path="/asistente/reuniones" element={<AsistenteReuniones />} />
             <Route path="/asistente/agenda" element={<AsistenteAgenda />} />
             <Route path="/asistente/reunion-detalle/:id" element={<AsistenteReunionDetalle />} />
-            <Route path="/asistente/revision_tareas" element={<AsistenteTareasRevision />} />
-
+            <Route path="/asistente/revision-tareas" element={<AsistenteRevisionTareas />} />
+            <Route path="/asistente/mis-tareas" element={<AsistenteTareas />} />
           </Route>
         </Route>
 
@@ -72,7 +75,7 @@ export default function App() {
         <Route element={<PrivateRoute allowedRoles={['JefeDepto']} />}>
           <Route element={<MainLayout />}>
             <Route path="/jefe_depto/inicio" element={<JefeDeptoInicio />} />
-            <Route path="/jefe_depto/tareas" element={<Tareas />} />
+            <Route path="/jefe_depto/tareas" element={<JefeDeptoTareas />} />
             <Route path="/jefe_depto/reuniones" element={<ReunionesJD />} />
             <Route path="/jefe_depto/reunion/:id" element={<ReunionDetalleJD />} />   
           </Route>

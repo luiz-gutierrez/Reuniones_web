@@ -20,7 +20,7 @@ import {
   FaSave
 } from 'react-icons/fa';
 
-export default function AsistenteTareasRevision() {
+export default function AsistenteRevisionTareas() {
   const navigate = useNavigate();
   
   // ========== ESTADOS PRINCIPALES ==========

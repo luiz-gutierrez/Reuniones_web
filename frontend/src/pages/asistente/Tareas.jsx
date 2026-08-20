@@ -21,7 +21,7 @@ import {
 } from 'react-icons/fa';
 import { MdPending, MdPublishedWithChanges } from 'react-icons/md';
 
-export default function JefeDeptoTareas() {
+export default function AsistenteTareas() {
   const { user } = useAuth();
   const [tareas, setTareas] = useState([]);
   const [loading, setLoading] = useState(true);

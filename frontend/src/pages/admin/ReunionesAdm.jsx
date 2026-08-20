@@ -1,4 +1,4 @@
-// src/pages/admin/ReunionesJD.jsx
+// src/pages/admin/ReunionesAdm.jsx
 import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import api from '../../api/axios';
@@ -23,7 +23,7 @@ import {
   FaCalendar
 } from 'react-icons/fa';
 
-export default function AdminReuniones() {
+export default function ReunionesAdm() {
   const { user } = useAuth();
   const navigate = useNavigate();
   const [reuniones, setReuniones] = useState([]);
@@ -54,7 +54,7 @@ export default function AdminReuniones() {
   };
 
   const verDetalleReunion = (reunionId) => {
-    navigate(`/jefe_depto/reunion/${reunionId}`);
+    navigate(`/admin/reunion/${reunionId}`);
   };
 
   const formatearFecha = (fecha) => {

@@ -49,7 +49,9 @@ const MENUS = {
     { to: '/asistente/inicio', label: 'Inicio' },
     { to: '/asistente/reuniones', label: 'Reuniones' },
     { to: '/asistente/agenda', label: 'Agenda' },
-    { to: '/asistente/revision_tareas', label: 'Revisar tareas' }
+    { to: '/asistente/revision-tareas', label: 'Revisar tareas' },
+    { to: '/asistente/mis-tareas', label: 'Mis tareas' },
+    
   ],
   Gerente: [
     { to: '/gerente/inicio', label: 'Inicio' },
