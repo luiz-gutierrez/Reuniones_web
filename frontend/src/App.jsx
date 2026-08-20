@@ -12,7 +12,6 @@ import ReunionesAdm from './pages/admin/ReunionesAdm';
 import ReunionDetalleAdm from './pages/admin/ReunionDetalleAdm'
 
 import AsistenteInicio from './pages/asistente/Inicio';
-import AsistenteReuniones from './pages/asistente/Reuniones';
 import AsistenteAgenda from './pages/asistente/Agenda';
 import AsistenteReunionDetalle from './pages/asistente/ReunionDetalle';
 import AsistenteRevisionTareas from './pages/asistente/RevisionTareas';
@@ -53,7 +52,6 @@ export default function App() {
         <Route element={<PrivateRoute allowedRoles={['Secretaria']} />}>
           <Route element={<MainLayout />}>
             <Route path="/asistente/inicio" element={<AsistenteInicio />} />
-            <Route path="/asistente/reuniones" element={<AsistenteReuniones />} />
             <Route path="/asistente/agenda" element={<AsistenteAgenda />} />
             <Route path="/asistente/reunion-detalle/:id" element={<AsistenteReunionDetalle />} />
             <Route path="/asistente/revision-tareas" element={<AsistenteRevisionTareas />} />

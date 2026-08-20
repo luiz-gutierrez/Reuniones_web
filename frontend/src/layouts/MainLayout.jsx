@@ -48,7 +48,6 @@ const MENUS = {
   ],
   Secretaria: [
     { to: '/asistente/inicio', label: 'Inicio' },
-    { to: '/asistente/reuniones', label: 'Reuniones' },
     { to: '/asistente/agenda', label: 'Agenda' },
     { to: '/asistente/revision-tareas', label: 'Revisar tareas' },
     { to: '/asistente/mis-tareas', label: 'Mis tareas' },

@@ -844,7 +844,7 @@ export default function Agenda() {
                 : 'bg-transparent text-gray-700 hover:bg-gray-50'
             }`}
           >
-            <FaCalendarDay /> {esMovil ? 'Calendario' : 'Calendario'}
+            <FaCalendarDay /> Calendario
           </button>
           <button
             onClick={() => setVista('lista')}
@@ -854,7 +854,7 @@ export default function Agenda() {
                 : 'bg-transparent text-gray-700 hover:bg-gray-50'
             }`}
           >
-            <FaList /> {esMovil ? 'Lista' : 'Lista'}
+            <FaList /> Lista
           </button>
         </div>
       </div>
