@@ -16,6 +16,7 @@ import {
   FaUser,
   FaBuilding,
   FaCalendarCheck,
+  FaSearch,
   FaUserTie
 } from 'react-icons/fa';
 import { useState, useRef, useEffect } from 'react';
@@ -24,8 +25,8 @@ import { useState, useRef, useEffect } from 'react';
 const ICONOS_MENU = {
   'Inicio': <FaHome className="text-lg" />,
   'Usuarios': <FaUsers className="text-lg" />,
-  'Tareas': <FaTasks className="text-lg" />,
   'Mis tareas': <FaTasks className="text-lg" />,
+  'Revisar tareas': <FaSearch className="text-lg" />,
   'Reuniones': <FaCalendarAlt className="text-lg" />,
   'Agenda': <FaClipboardList className="text-lg" />,
 };
@@ -55,14 +56,14 @@ const MENUS = {
   ],
   Gerente: [
     { to: '/gerente/inicio', label: 'Inicio' },
-    { to: '/gerente/tareas', label: 'Tareas' },
+    { to: '/gerente/tareas', label: 'Mis tareas' },
     { to: '/gerente/reuniones', label: 'Reuniones' },
     { to: '/gerente/revision-tareas', label: 'Revisar tareas' },
 
   ],
   JefeDepto: [
     { to: '/jefe_depto/inicio', label: 'Inicio' },
-    { to: '/jefe_depto/tareas', label: 'Tareas' },
+    { to: '/jefe_depto/tareas', label: 'Mis Tareas' },
     { to: '/jefe_depto/reuniones', label: 'Reuniones' },
   ],
   Usuario: [

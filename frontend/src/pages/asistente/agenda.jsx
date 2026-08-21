@@ -777,10 +777,10 @@ export default function Agenda() {
       <div className="flex justify-between items-center flex-wrap gap-3 sm:gap-4 mb-4 sm:mb-6">
         <div>
           <h1 className="text-2xl sm:text-3xl font-bold text-gray-800 m-0">
-            📅 Agenda
+            Agenda
           </h1>
           <p className="text-gray-600 opacity-60 m-0 mt-1 text-sm sm:text-base">
-            Visualiza todas tus reuniones organizadas por fecha
+            Visualiza todas tus reuniones 
           </p>
         </div>
         <div className="flex gap-2 sm:gap-3 flex-wrap">
