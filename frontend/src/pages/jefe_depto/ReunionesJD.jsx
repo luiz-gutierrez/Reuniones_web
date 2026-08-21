@@ -355,89 +355,91 @@ export default function ReunionesJD() {
 
       {/* Lista de reuniones */}
       {reunionesOrdenadas.length === 0 ? (
-        <div className="bg-white rounded-xl shadow-sm p-12 text-center border border-gray-100">
-          <div className="text-6xl mb-4">
-            {filtroFecha === 'hoy' ? '📅' : 
-             filtroFecha === 'proximas' ? '📆' : 
-             filtroFecha === 'finalizadas' ? '✅' : '📋'}
-          </div>
-          <h3 className="text-xl font-semibold text-gray-700 mb-2">
-            {filtroFecha === 'hoy' ? 'No hay reuniones para hoy' : 
-             filtroFecha === 'proximas' ? 'No hay reuniones próximas' : 
-             filtroFecha === 'finalizadas' ? 'No hay reuniones finalizadas' : 
-             'No hay reuniones para mostrar'}
-          </h3>
-          <p className="text-gray-500">
-            {reuniones.length === 0 
-              ? 'No estás invitado a ninguna reunión actualmente' 
-              : 'No se encontraron reuniones con los filtros seleccionados'}
-          </p>
-        </div>
-      ) : (
-        <div className="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 gap-6">
-          {reunionesOrdenadas.map((reunion) => {
-            const estatusReunion = getEstatusReunion(reunion.reu_fecha, reunion.reu_hora);
-            
-            return (
-              <div 
-                key={reunion.reu_id}
-                className="bg-white rounded-xl shadow-sm border border-gray-200 hover:shadow-lg transition-all duration-300 overflow-hidden cursor-pointer"
-                onClick={() => verDetalleReunion(reunion.reu_id)}
-              >
-                <div className="p-5">
-                  <div className="flex justify-between items-start">
-                    <h3 className="text-lg font-semibold text-gray-900 line-clamp-1 flex-1">
-                      {reunion.reu_nombre}
-                    </h3>
-                    <span className={`inline-flex items-center px-2.5 py-1 rounded-full text-xs font-medium border ml-2 flex-shrink-0 ${getEstatusClase(estatusReunion)}`}>
-                      {getEstatusIcon(estatusReunion)}
-                      <span className="ml-1">{getEstatusTexto(estatusReunion)}</span>
-                    </span>
-                  </div>
-
-                  <p className="text-sm text-gray-600 mt-2 line-clamp-2">
-                    {reunion.reu_descripcion || 'Sin descripción'}
-                  </p>
-
-                  <div className="mt-4 space-y-2">
-                    <div className="flex items-center gap-2 text-sm text-gray-600">
-                      <FaCalendarAlt className="text-blue-500 text-xs" />
-                      <span>{formatearFechaCompleta(reunion.reu_fecha)}</span>
-                    </div>
-                    <div className="flex items-center gap-2 text-sm text-gray-600">
-                      <FaClock className="text-blue-500 text-xs" />
-                      <span>{formatearHora(reunion.reu_hora)}</span>
-                    </div>
-                    <div className="flex items-center gap-2 text-sm text-gray-600">
-                      <FaMapMarkerAlt className="text-blue-500 text-xs" />
-                      <span>{reunion.reu_lugar || 'No especificado'}</span>
-                    </div>
-                    <div className="flex items-center gap-2 text-sm text-gray-600">
-                      <FaUsers className="text-blue-500 text-xs" />
-                      <span>{reunion.total_invitados || 0} participantes</span>
-                    </div>
-                  </div>
-
-                  {/* Mi estado de asistencia */}
-                  <div className="mt-4 pt-4 border-t border-gray-200">
-                    <div className="flex items-center justify-between">
-                      <button
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          verDetalleReunion(reunion.reu_id);
-                        }}
-                        className="px-3 py-1 bg-blue-600 hover:bg-blue-700 text-white text-xs rounded-lg transition-colors flex items-center gap-1"
-                      >
-                        <FaInfoCircle /> Ver Detalle
-                      </button>
-                    </div>
-                  </div>
+              <div className="bg-white rounded-xl shadow-sm p-12 text-center border border-gray-100">
+                <div className="text-6xl mb-4">
+                  {filtroFecha === 'hoy' ? '📅' :
+                    filtroFecha === 'proximas' ? '📆' :
+                      filtroFecha === 'finalizadas' ? '✅' : '📋'}
                 </div>
+                <h3 className="text-xl font-semibold text-gray-700 mb-2">
+                  {filtroFecha === 'hoy' ? 'No hay reuniones para hoy' :
+                    filtroFecha === 'proximas' ? 'No hay reuniones próximas' :
+                      filtroFecha === 'finalizadas' ? 'No hay reuniones finalizadas' :
+                        'No hay reuniones para mostrar'}
+                </h3>
+                <p className="text-gray-500">
+                  {reuniones.length === 0
+                    ? 'No estás invitado a ninguna reunión actualmente'
+                    : 'No se encontraron reuniones con los filtros seleccionados'}
+                </p>
               </div>
-            );
-          })}
-        </div>
-      )}
+            ) : (
+              <div className="grid grid-cols-2 gap-4 md:gap-6 lg:gap-8">
+                {reunionesOrdenadas.map((reunion) => {
+                  const estatusReunion = getEstatusReunion(reunion.reu_fecha, reunion.reu_hora);
+      
+                  return (
+                    <div
+                      key={reunion.reu_id}
+                      className="bg-white rounded-xl shadow-sm border border-gray-200 hover:shadow-lg transition-all duration-300 overflow-hidden cursor-pointer"
+                      onClick={() => verDetalleReunion(reunion.reu_id)}
+                    >
+                      <div className="p-3 sm:p-4 md:p-5">
+                        <div className="flex justify-between items-start">
+                          <h3 className="text-sm sm:text-base md:text-lg font-semibold text-gray-900 line-clamp-1 flex-1">
+                            {reunion.reu_nombre}
+                          </h3>
+                          <span className={`inline-flex items-center px-2 py-0.5 sm:px-2.5 sm:py-1 rounded-full text-[10px] sm:text-xs font-medium border ml-2 flex-shrink-0 ${getEstatusClase(estatusReunion)}`}>
+                            {getEstatusIcon(estatusReunion)}
+                            <span className="ml-1 hidden sm:inline">{getEstatusTexto(estatusReunion)}</span>
+                          </span>
+                        </div>
+      
+                        <p className="text-xs sm:text-sm text-gray-600 mt-2 line-clamp-2">
+                          {reunion.reu_descripcion || 'Sin descripción'}
+                        </p>
+      
+                        <div className="mt-3 sm:mt-4 space-y-1.5 sm:space-y-2">
+                          <div className="flex items-center gap-1.5 sm:gap-2 text-xs sm:text-sm text-gray-600">
+                            <FaCalendarAlt className="text-blue-500 text-[10px] sm:text-xs" />
+                            <span className="truncate">{formatearFechaCompleta(reunion.reu_fecha)}</span>
+                          </div>
+                          <div className="flex items-center gap-1.5 sm:gap-2 text-xs sm:text-sm text-gray-600">
+                            <FaClock className="text-blue-500 text-[10px] sm:text-xs" />
+                            <span>{formatearHora(reunion.reu_hora)}</span>
+                          </div>
+                          <div className="flex items-center gap-1.5 sm:gap-2 text-xs sm:text-sm text-gray-600">
+                            <FaMapMarkerAlt className="text-blue-500 text-[10px] sm:text-xs" />
+                            <span className="truncate">{reunion.reu_lugar || 'No especificado'}</span>
+                          </div>
+                          <div className="flex items-center gap-1.5 sm:gap-2 text-xs sm:text-sm text-gray-600">
+                            <FaUsers className="text-blue-500 text-[10px] sm:text-xs" />
+                            <span>{reunion.total_invitados || 0} participantes</span>
+                          </div>
+                        </div>
+      
+                        {/* Mi estado de asistencia */}
+                        <div className="mt-3 sm:mt-4 pt-3 sm:pt-4 border-t border-gray-200">
+                          <div className="flex items-center justify-between">
+                            <button
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                verDetalleReunion(reunion.reu_id);
+                              }}
+                              className="px-2 sm:px-3 py-1 bg-blue-600 hover:bg-blue-700 text-white text-[10px] sm:text-xs rounded-lg transition-colors flex items-center gap-1"
+                            >
+                              <FaInfoCircle className="text-[10px] sm:text-xs" />
+                              <span className="hidden sm:inline">Ver Detalle</span>
+                              <span className="sm:hidden">Detalle</span>
+                            </button>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+            )}
     </div>
   );
 }

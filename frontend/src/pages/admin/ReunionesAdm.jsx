@@ -3,12 +3,12 @@ import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import api from '../../api/axios';
 import { useAuth } from '../../context/AuthContext';
-import { 
-  FaCalendarAlt, 
-  FaClock, 
-  FaMapMarkerAlt, 
-  FaUsers, 
-  FaUser, 
+import {
+  FaCalendarAlt,
+  FaClock,
+  FaMapMarkerAlt,
+  FaUsers,
+  FaUser,
   FaInfoCircle,
   FaSearch,
   FaSpinner,
@@ -89,8 +89,8 @@ export default function ReunionesAdm() {
     const hoy = new Date();
     const fechaReunion = new Date(fecha);
     return fechaReunion.getDate() === hoy.getDate() &&
-           fechaReunion.getMonth() === hoy.getMonth() &&
-           fechaReunion.getFullYear() === hoy.getFullYear();
+      fechaReunion.getMonth() === hoy.getMonth() &&
+      fechaReunion.getFullYear() === hoy.getFullYear();
   };
 
   // Determinar si una reunión es próxima (fecha futura)
@@ -118,7 +118,7 @@ export default function ReunionesAdm() {
   // Determinar el estatus de la reunión basado en la fecha
   const getEstatusReunion = (fecha, hora) => {
     if (!fecha) return 'sin_fecha';
-    
+
     if (esHoy(fecha)) {
       return 'hoy';
     } else if (esProxima(fecha)) {
@@ -174,8 +174,8 @@ export default function ReunionesAdm() {
   const reunionesFiltradas = reuniones.filter(reunion => {
     // Filtro por búsqueda
     const searchMatch = reunion.reu_nombre?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                        reunion.reu_descripcion?.toLowerCase().includes(searchTerm.toLowerCase());
-    
+      reunion.reu_descripcion?.toLowerCase().includes(searchTerm.toLowerCase());
+
     if (!searchMatch) return false;
 
     // Filtro por fecha
@@ -223,7 +223,7 @@ export default function ReunionesAdm() {
           <FaExclamationTriangle className="text-4xl text-red-500 mx-auto mb-3" />
           <h3 className="text-red-800 font-semibold text-lg mb-2">Error al cargar reuniones</h3>
           <p className="text-red-600 mb-4">{error}</p>
-          <button 
+          <button
             onClick={cargarReuniones}
             className="px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors"
           >
@@ -249,10 +249,9 @@ export default function ReunionesAdm() {
 
         {/* Tarjetas de filtro rápido */}
         <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 mt-4">
-          <div 
-            className={`bg-white rounded-xl shadow-sm p-4 border-2 transition-all cursor-pointer hover:shadow-md ${
-              filtroFecha === 'hoy' ? 'border-blue-500 bg-blue-50' : 'border-gray-200'
-            }`}
+          <div
+            className={`bg-white rounded-xl shadow-sm p-4 border-2 transition-all cursor-pointer hover:shadow-md ${filtroFecha === 'hoy' ? 'border-blue-500 bg-blue-50' : 'border-gray-200'
+              }`}
             onClick={() => setFiltroFecha('hoy')}
           >
             <div className="flex items-center gap-3">
@@ -266,10 +265,9 @@ export default function ReunionesAdm() {
             </div>
           </div>
 
-          <div 
-            className={`bg-white rounded-xl shadow-sm p-4 border-2 transition-all cursor-pointer hover:shadow-md ${
-              filtroFecha === 'proximas' ? 'border-yellow-500 bg-yellow-50' : 'border-gray-200'
-            }`}
+          <div
+            className={`bg-white rounded-xl shadow-sm p-4 border-2 transition-all cursor-pointer hover:shadow-md ${filtroFecha === 'proximas' ? 'border-yellow-500 bg-yellow-50' : 'border-gray-200'
+              }`}
             onClick={() => setFiltroFecha('proximas')}
           >
             <div className="flex items-center gap-3">
@@ -283,10 +281,9 @@ export default function ReunionesAdm() {
             </div>
           </div>
 
-          <div 
-            className={`bg-white rounded-xl shadow-sm p-4 border-2 transition-all cursor-pointer hover:shadow-md ${
-              filtroFecha === 'finalizadas' ? 'border-green-500 bg-green-50' : 'border-gray-200'
-            }`}
+          <div
+            className={`bg-white rounded-xl shadow-sm p-4 border-2 transition-all cursor-pointer hover:shadow-md ${filtroFecha === 'finalizadas' ? 'border-green-500 bg-green-50' : 'border-gray-200'
+              }`}
             onClick={() => setFiltroFecha('finalizadas')}
           >
             <div className="flex items-center gap-3">
@@ -300,10 +297,9 @@ export default function ReunionesAdm() {
             </div>
           </div>
 
-          <div 
-            className={`bg-white rounded-xl shadow-sm p-4 border-2 transition-all cursor-pointer hover:shadow-md ${
-              filtroFecha === 'todas' ? 'border-gray-500 bg-gray-50' : 'border-gray-200'
-            }`}
+          <div
+            className={`bg-white rounded-xl shadow-sm p-4 border-2 transition-all cursor-pointer hover:shadow-md ${filtroFecha === 'todas' ? 'border-gray-500 bg-gray-50' : 'border-gray-200'
+              }`}
             onClick={() => setFiltroFecha('todas')}
           >
             <div className="flex items-center gap-3">
@@ -357,78 +353,80 @@ export default function ReunionesAdm() {
       {reunionesOrdenadas.length === 0 ? (
         <div className="bg-white rounded-xl shadow-sm p-12 text-center border border-gray-100">
           <div className="text-6xl mb-4">
-            {filtroFecha === 'hoy' ? '📅' : 
-             filtroFecha === 'proximas' ? '📆' : 
-             filtroFecha === 'finalizadas' ? '✅' : '📋'}
+            {filtroFecha === 'hoy' ? '📅' :
+              filtroFecha === 'proximas' ? '📆' :
+                filtroFecha === 'finalizadas' ? '✅' : '📋'}
           </div>
           <h3 className="text-xl font-semibold text-gray-700 mb-2">
-            {filtroFecha === 'hoy' ? 'No hay reuniones para hoy' : 
-             filtroFecha === 'proximas' ? 'No hay reuniones próximas' : 
-             filtroFecha === 'finalizadas' ? 'No hay reuniones finalizadas' : 
-             'No hay reuniones para mostrar'}
+            {filtroFecha === 'hoy' ? 'No hay reuniones para hoy' :
+              filtroFecha === 'proximas' ? 'No hay reuniones próximas' :
+                filtroFecha === 'finalizadas' ? 'No hay reuniones finalizadas' :
+                  'No hay reuniones para mostrar'}
           </h3>
           <p className="text-gray-500">
-            {reuniones.length === 0 
-              ? 'No estás invitado a ninguna reunión actualmente' 
+            {reuniones.length === 0
+              ? 'No estás invitado a ninguna reunión actualmente'
               : 'No se encontraron reuniones con los filtros seleccionados'}
           </p>
         </div>
       ) : (
-        <div className="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 gap-6">
+        <div className="grid grid-cols-2 gap-4 md:gap-6 lg:gap-8">
           {reunionesOrdenadas.map((reunion) => {
             const estatusReunion = getEstatusReunion(reunion.reu_fecha, reunion.reu_hora);
-            
+
             return (
-              <div 
+              <div
                 key={reunion.reu_id}
                 className="bg-white rounded-xl shadow-sm border border-gray-200 hover:shadow-lg transition-all duration-300 overflow-hidden cursor-pointer"
                 onClick={() => verDetalleReunion(reunion.reu_id)}
               >
-                <div className="p-5">
+                <div className="p-3 sm:p-4 md:p-5">
                   <div className="flex justify-between items-start">
-                    <h3 className="text-lg font-semibold text-gray-900 line-clamp-1 flex-1">
+                    <h3 className="text-sm sm:text-base md:text-lg font-semibold text-gray-900 line-clamp-1 flex-1">
                       {reunion.reu_nombre}
                     </h3>
-                    <span className={`inline-flex items-center px-2.5 py-1 rounded-full text-xs font-medium border ml-2 flex-shrink-0 ${getEstatusClase(estatusReunion)}`}>
+                    <span className={`inline-flex items-center px-2 py-0.5 sm:px-2.5 sm:py-1 rounded-full text-[10px] sm:text-xs font-medium border ml-2 flex-shrink-0 ${getEstatusClase(estatusReunion)}`}>
                       {getEstatusIcon(estatusReunion)}
-                      <span className="ml-1">{getEstatusTexto(estatusReunion)}</span>
+                      <span className="ml-1 hidden sm:inline">{getEstatusTexto(estatusReunion)}</span>
                     </span>
                   </div>
 
-                  <p className="text-sm text-gray-600 mt-2 line-clamp-2">
+                  <p className="text-xs sm:text-sm text-gray-600 mt-2 line-clamp-2">
                     {reunion.reu_descripcion || 'Sin descripción'}
                   </p>
 
-                  <div className="mt-4 space-y-2">
-                    <div className="flex items-center gap-2 text-sm text-gray-600">
-                      <FaCalendarAlt className="text-blue-500 text-xs" />
-                      <span>{formatearFechaCompleta(reunion.reu_fecha)}</span>
+                  <div className="mt-3 sm:mt-4 space-y-1.5 sm:space-y-2">
+                    <div className="flex items-center gap-1.5 sm:gap-2 text-xs sm:text-sm text-gray-600">
+                      <FaCalendarAlt className="text-blue-500 text-[10px] sm:text-xs" />
+                      <span className="truncate">{formatearFechaCompleta(reunion.reu_fecha)}</span>
                     </div>
-                    <div className="flex items-center gap-2 text-sm text-gray-600">
-                      <FaClock className="text-blue-500 text-xs" />
+                    <div className="flex items-center gap-1.5 sm:gap-2 text-xs sm:text-sm text-gray-600">
+                      <FaClock className="text-blue-500 text-[10px] sm:text-xs" />
                       <span>{formatearHora(reunion.reu_hora)}</span>
                     </div>
-                    <div className="flex items-center gap-2 text-sm text-gray-600">
-                      <FaMapMarkerAlt className="text-blue-500 text-xs" />
-                      <span>{reunion.reu_lugar || 'No especificado'}</span>
+                    <div className="flex items-center gap-1.5 sm:gap-2 text-xs sm:text-sm text-gray-600">
+                      <FaMapMarkerAlt className="text-blue-500 text-[10px] sm:text-xs" />
+                      <span className="truncate">{reunion.reu_lugar || 'No especificado'}</span>
                     </div>
-                    <div className="flex items-center gap-2 text-sm text-gray-600">
-                      <FaUsers className="text-blue-500 text-xs" />
+                    <div className="flex items-center gap-1.5 sm:gap-2 text-xs sm:text-sm text-gray-600">
+                      <FaUsers className="text-blue-500 text-[10px] sm:text-xs" />
                       <span>{reunion.total_invitados || 0} participantes</span>
                     </div>
                   </div>
 
                   {/* Mi estado de asistencia */}
-                  <div className="mt-4 pt-4 border-t border-gray-200">
+                  <div className="mt-3 sm:mt-4 pt-3 sm:pt-4 border-t border-gray-200">
                     <div className="flex items-center justify-between">
                       <button
                         onClick={(e) => {
                           e.stopPropagation();
                           verDetalleReunion(reunion.reu_id);
                         }}
-                        className="px-3 py-1 bg-blue-600 hover:bg-blue-700 text-white text-xs rounded-lg transition-colors flex items-center gap-1"
+                        className="px-2 sm:px-3 py-1 bg-blue-600 hover:bg-blue-700 text-white text-[10px] sm:text-xs rounded-lg transition-colors flex items-center gap-1"
                       >
-                        <FaInfoCircle /> Ver Detalle
+                        <FaInfoCircle className="text-[10px] sm:text-xs" />
+                        <span className="hidden sm:inline">Ver Detalle</span>
+                        <span className="sm:hidden">Detalle</span>
                       </button>
                     </div>
                   </div>

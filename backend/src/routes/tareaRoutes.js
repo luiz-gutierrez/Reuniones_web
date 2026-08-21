@@ -20,6 +20,7 @@ router.get('/reunion/:id', verifyToken, checkRole('Admin', 'Secretaria'), getTar
 router.put('/:id', actualizarTarea);
 // Para eliminar una tarea
 router.delete('/:id', eliminarTarea);
+
 // Para actualizar solo el estado de la tarea
 router.put('/:id/estado', actualizarEstadoTarea);
 
@@ -31,6 +32,6 @@ router.put('/:id/estado', verifyToken, checkRole('Admin', 'Secretaria','Gerente'
 router.get('/usuario/:userId/todas', verifyToken, checkRole('Gerente','JefeDepto','Secretaria'),getTareasByUsuarioAll);
 
 // Obtener todas las tareas
-router.get('/', verifyToken, checkRole('Admin', 'Secretaria'), getTareasAll);
+router.get('/', verifyToken, checkRole('Admin', 'Secretaria','Gerente'), getTareasAll);
 
 export default router;

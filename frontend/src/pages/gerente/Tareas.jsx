@@ -59,7 +59,7 @@ export default function GerenteTareas() {
     }
 
     const confirmar = window.confirm(
-      `¿Estás seguro de cambiar esta tarea a "${nuevoEstatus}"?`
+      `¿Estás seguro de cambiar el estado de la tarea?`
     );
     if (!confirmar) return;
 
@@ -71,7 +71,7 @@ export default function GerenteTareas() {
       });
       
       await cargarTareas();
-      alert(`✅ Tarea actualizada a "${nuevoEstatus}" correctamente`);
+      alert(`✅ Tarea actualizada correctamente`);
 
     } catch (error) {
       console.error('Error al actualizar estado:', error);
@@ -250,7 +250,7 @@ export default function GerenteTareas() {
           <div className="flex items-center justify-between">
             <div>
               <p className="text-sm text-gray-500 font-medium flex items-center gap-1">
-                <FaPaperPlane className="text-purple-500" /> En Revisión
+                <FaPaperPlane className="text-purple-500" /> En Revisión con asistente
               </p>
               <p className="text-3xl font-bold text-purple-600 mt-1">{contarPorEstatus('Revision')}</p>
             </div>
@@ -311,7 +311,7 @@ export default function GerenteTareas() {
             className="px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none bg-white"
           >
             <option value="pendientes">📌 Pendientes</option>
-            <option value="revision">📤 En Revisión</option>
+            <option value="revision">📤 Revisión con asistente</option>
             <option value="finalizadas">✅ Finalizadas</option>
             <option value="todas">📊 Todas</option>
           </select>
@@ -458,7 +458,7 @@ export default function GerenteTareas() {
                     >
                       <option value="Iniciar">🚀 Iniciar</option>
                       <option value="Proceso">🔄 Proceso</option>
-                      <option value="Revision">📤 Revisión</option>
+                      <option value="Revision">📤 Revisión con asistente</option>
                     </select>
                   ) : (
                     <div className="text-center text-sm text-gray-500 flex items-center justify-center gap-2">

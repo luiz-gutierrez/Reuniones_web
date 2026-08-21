@@ -59,7 +59,7 @@ export default function AsistenteTareas() {
     }
 
     const confirmar = window.confirm(
-      `¿Estás seguro de cambiar esta tarea a "${nuevoEstatus}"?`
+      `¿Estás seguro de cambiar el estado esta tarea?`
     );
     if (!confirmar) return;
 
@@ -71,7 +71,7 @@ export default function AsistenteTareas() {
       });
       
       await cargarTareas();
-      alert(`✅ Tarea actualizada a "${nuevoEstatus}" correctamente`);
+      alert(`✅ Tarea actualizada correctamente`);
 
     } catch (error) {
       console.error('Error al actualizar estado:', error);

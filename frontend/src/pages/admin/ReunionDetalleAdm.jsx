@@ -57,7 +57,7 @@ export default function ReunionDetalleAdm() {
 
 
     const volver = () => {
-        navigate('/jefe_depto/reuniones');
+        navigate('/admin/reuniones');
     };
 
     const formatearFecha = (fecha) => {

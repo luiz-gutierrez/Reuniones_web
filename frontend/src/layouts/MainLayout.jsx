@@ -57,6 +57,8 @@ const MENUS = {
     { to: '/gerente/inicio', label: 'Inicio' },
     { to: '/gerente/tareas', label: 'Tareas' },
     { to: '/gerente/reuniones', label: 'Reuniones' },
+    { to: '/gerente/revision-tareas', label: 'Revisar tareas' },
+
   ],
   JefeDepto: [
     { to: '/jefe_depto/inicio', label: 'Inicio' },

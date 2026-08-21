@@ -243,8 +243,7 @@ async function getTareasByUsuario(req, res) {
 // GET /api/tareas/ (Gerente, JefeDepto)
 async function actualizarEstadoTarea(req, res) {
   const { id } = req.params;
-  const { tar_estatus, tar_nota } = req.body; // ✅ Añadir tar_nota
-
+  const { tar_estatus, tar_nota } = req.body;
   // Validar que el ID existe
   if (!id) {
     return res.status(400).json({
@@ -253,12 +252,12 @@ async function actualizarEstadoTarea(req, res) {
     });
   }
 
-  // ✅ Actualizar los estados válidos (incluyendo Finalizado)
-  const estatusValidos = ['Iniciar', 'Proceso', 'Revision', 'Finalizado'];
+  // ✅ Actualizar los estados válidos 
+  const estatusValidos = ['Iniciar', 'Proceso', 'Prerevision', 'Revision', 'Finalizado'];
   if (!estatusValidos.includes(tar_estatus)) {
     return res.status(400).json({
       success: false,
-      message: 'Estado inválido. Debe ser: Iniciar, Proceso, Revisión o Finalizado'
+      message: 'Estado inválido. Debe ser: Iniciar, Proceso, Prerevision, Revisión o Finalizado'
     });
   }
 
@@ -352,8 +351,9 @@ async function getTareasByUsuarioAll(req, res) {
         CASE t.tar_estatus
           WHEN 'Iniciar' THEN 1
           WHEN 'Proceso' THEN 2
-          WHEN 'Revisión' THEN 3
-          WHEN 'Finalizado' THEN 4
+          WHEN 'Prerevision' THEN 3
+          WHEN 'Revision' THEN 4
+          WHEN 'Finalizado' THEN 5
         END,
         t.tar_prioridad DESC,
         t.tar_fecha ASC`,

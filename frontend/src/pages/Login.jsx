@@ -101,7 +101,7 @@ export default function Login() {
                   type="tel"
                   value={telefono}
                   onChange={(e) => setTelefono(e.target.value.replace(/\D/g, ''))}
-                  placeholder="Ej: 50000000"
+                  placeholder="Ej: 5000000000"
                   className="w-full pl-10 pr-4 py-3 border border-gray-200 rounded-xl 
                            focus:ring-2 focus:ring-blue-500 focus:border-blue-500 
                            outline-none transition-all duration-200
@@ -110,7 +110,7 @@ export default function Login() {
                   disabled={cargando}
                 />
               </div>
-              <p className="text-xs text-gray-400 mt-1">Ingresa solo números (8 dígitos)</p>
+              <p className="text-xs text-gray-400 mt-1">Ingresa solo números (10 dígitos)</p>
             </div>
             <div>
               <label className="block text-sm font-semibold text-gray-700 mb-2">

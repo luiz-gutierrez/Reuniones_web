@@ -21,6 +21,7 @@ import GerenteInicio from './pages/gerente/Inicio';
 import GerenteTareas from './pages/gerente/Tareas';
 import Reuniones from './pages/gerente/Reuniones';
 import ReunionDetalle from './pages/gerente/ReunionDetalle';
+import GerenteRevisionTareas from './pages/gerente/RevisionTareas'
 
 
 import JefeDeptoInicio from './pages/jefe_depto/Inicio';
@@ -65,7 +66,8 @@ export default function App() {
             <Route path="/gerente/inicio" element={<GerenteInicio />} />
             <Route path="/gerente/tareas" element={<GerenteTareas />} />
             <Route path="/gerente/reuniones" element={<Reuniones />} />
-            <Route path="/gerente/reunion/:id" element={<ReunionDetalle />} />          
+            <Route path="/gerente/reunion/:id" element={<ReunionDetalle />} />      
+            <Route path="/gerente/revision-tareas" element={<GerenteRevisionTareas />} />
           </Route>
         </Route>
 

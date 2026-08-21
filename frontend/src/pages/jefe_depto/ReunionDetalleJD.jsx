@@ -304,9 +304,6 @@ export default function ReunionDetalleJD() {
                         </div>
                     )}
                 </div>
-
-                {/* Footer con estadísticas */}
-
             </div>
         </div>
     );
