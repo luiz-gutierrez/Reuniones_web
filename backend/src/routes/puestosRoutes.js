@@ -7,7 +7,7 @@ import checkRole from '../middlewares/role.js';
 const router = express.Router();
 
 // GET /api/puestos (solo admin)
-router.get('/', verifyToken, checkRole('Admin'), async (req, res) => {
+router.get('/', verifyToken, checkRole('Admin','Director'), async (req, res) => {
   try {
     const [rows] = await pool.query(
       `SELECT p.pue_id, p.pue_nombre, d.dep_nombre as departamento, r.rol_nombre as rol

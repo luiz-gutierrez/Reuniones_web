@@ -11,6 +11,12 @@ import AdminTareas from './pages/admin/Tareas';
 import ReunionesAdm from './pages/admin/ReunionesAdm';
 import ReunionDetalleAdm from './pages/admin/ReunionDetalleAdm'
 
+import DirectorInicio from './pages/director/Inicio';
+import DirectorUsuarios from './pages/director/Usuarios';
+import DirectorTareas from './pages/director/Tareas';
+import DirectorReuniones from './pages/director/Reuniones';
+import DirectorReunionDetalle from './pages/director/ReunionDetalle';
+
 import AsistenteInicio from './pages/asistente/Inicio';
 import AsistenteAgenda from './pages/asistente/Agenda';
 import AsistenteReunionDetalle from './pages/asistente/ReunionDetalle';
@@ -44,8 +50,19 @@ export default function App() {
             <Route path="/admin/inicio" element={<AdminInicio />} />
             <Route path="/admin/usuarios" element={<AdminUsuarios />} />
             <Route path="/admin/tareas" element={<AdminTareas />} />
-            <Route path="/admin/reuniones" element={<ReunionesAdm />} />
-            <Route path="/admin/reunion/:id" element={<ReunionDetalleAdm />} />
+            <Route path="/admin/reuniones" element={<DirectorReuniones />} />
+            <Route path="/admin/reunion/:id" element={<DirectorReunionDetalle />} />
+          </Route>
+        </Route>
+
+         {/* Rutas del director */}
+        <Route element={<PrivateRoute allowedRoles={['Director']} />}>
+          <Route element={<MainLayout />}>
+            <Route path="/director/inicio" element={<DirectorInicio />} />
+            <Route path="/director/usuarios" element={<DirectorUsuarios />} />
+            <Route path="/director/tareas" element={<DirectorTareas />} />
+            <Route path="/director/reuniones" element={<ReunionesAdm />} />
+            <Route path="/director/reunion/:id" element={<ReunionDetalleAdm />} />
           </Route>
         </Route>
 

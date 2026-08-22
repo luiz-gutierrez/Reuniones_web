@@ -47,6 +47,12 @@ const MENUS = {
     { to: '/admin/tareas', label: 'Tareas' },
     { to: '/admin/reuniones', label: 'Reuniones' }
   ],
+  Director: [
+    { to: '/director/inicio', label: 'Inicio' },
+    { to: '/director/usuarios', label: 'Usuarios' },
+    { to: '/director/tareas', label: 'Tareas' },
+    { to: '/director/reuniones', label: 'Reuniones' }
+  ],
   Secretaria: [
     { to: '/asistente/inicio', label: 'Inicio' },
     { to: '/asistente/agenda', label: 'Agenda' },

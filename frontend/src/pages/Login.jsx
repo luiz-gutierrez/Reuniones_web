@@ -17,6 +17,7 @@ import {
 // ==========================================
 const RUTAS_POR_ROL = {
   Admin: '/admin/inicio',
+  Director: '/director/inicio',
   Secretaria: '/asistente/inicio',
   Gerente: '/gerente/inicio',
   JefeDepto: '/jefe_depto/inicio',

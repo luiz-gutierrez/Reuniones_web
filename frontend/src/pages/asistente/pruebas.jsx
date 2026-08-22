@@ -18,8 +18,8 @@ import {
   FaTimes,
   FaComment,
   FaSave,
-  FaChevronUp,    // ✅ Importar
-  FaChevronDown   // ✅ Importar
+  FaChevronUp,    
+  FaChevronDown   
 } from 'react-icons/fa';
 
 export default function AsistenteTareasRevision() {

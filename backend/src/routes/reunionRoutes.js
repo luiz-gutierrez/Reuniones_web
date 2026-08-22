@@ -79,7 +79,7 @@ const router = express.Router();
  *       500:
  *         description: Error interno del servidor
  */
-router.get('/', verifyToken, checkRole('Admin', 'Secretaria'), getReuniones);
+router.get('/', verifyToken, checkRole('Admin','Director', 'Secretaria'), getReuniones);
 // Solo la secretaria puede crear reuniones
 /**
  * @swagger
@@ -119,7 +119,7 @@ router.get('/', verifyToken, checkRole('Admin', 'Secretaria'), getReuniones);
 router.post('/', verifyToken, checkRole('Secretaria'), crearReunion);
 
 //Ver los invitados actuales de la  reunion y selecionarlo
-router.get('/:id/invitados', verifyToken, checkRole('Admin','Secretaria'), getInvitados);
+router.get('/:id/invitados', verifyToken, checkRole('Admin','Director','Secretaria'), getInvitados);
 //actualizar invitados de la reunion
 /**
  * @swagger
@@ -161,12 +161,12 @@ router.get('/:id/invitados', verifyToken, checkRole('Admin','Secretaria'), getIn
  */
 router.put('/:id/invitados', verifyToken, checkRole('Secretaria'), actualizarInvitados);
 //Obtener una reunión por ID
-router.get('/:id', verifyToken, checkRole('Admin','Secretaria','Gerente','JefeDepto'), getReunionById);
+router.get('/:id', verifyToken, checkRole('Admin','Director','Secretaria','Gerente','JefeDepto'), getReunionById);
 //Actualizar una reunión por ID
-router.put('/:id', verifyToken, checkRole('Admin','Secretaria'), actualizarReunion);
+router.put('/:id', verifyToken, checkRole('Admin','Director','Secretaria'), actualizarReunion);
 
 // Obtener reuniones del usuario logueado
-router.get('/usuario/:userId', verifyToken, checkRole('Admin','Gerente','JefeDepto'), getReunionesByUsuario);
+router.get('/usuario/:userId', verifyToken, checkRole('Admin','Director','Gerente','JefeDepto'), getReunionesByUsuario);
 
 // Obtener detalles de una reunión específic
 
